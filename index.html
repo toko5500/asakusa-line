@@ -232,7 +232,7 @@ body.is-3col .app-footer p{margin:0!important;overflow:hidden;text-overflow:elli
   const TT_BASE="https://api-public.odpt.org/api/v4/odpt:TrainTimetable?odpt:operator=odpt.Operator:Toei&odpt:railway=odpt.Railway:Toei.Asakusa&odpt:calendar=odpt.Calendar:";
   const ST_TT_BASE="https://api-public.odpt.org/api/v4/odpt:StationTimetable?odpt:operator=odpt.Operator:Toei&odpt:station=odpt.Station:Toei.Asakusa.";
   const SEC=45,P="odpt.Station:Toei.Asakusa.",NISHI_ID=P+"NishiMagome",SENGA_ID=P+"Sengakuji",ASAKUSABASHI_ID=P+"Asakusabashi",OSHI_ID=P+"Oshiage";
-  const SIDING_KEY="asakusa_siding_v1",TT_CACHE_KEY="asakusa_tt_cache_v1";
+  const SIDING_KEY="asakusa_siding_v1",TT_CACHE_KEY="asakusa_tt_cache_v2";
 
   const SENGA_MANUAL={
     Weekday:[
@@ -311,7 +311,6 @@ body.is-3col .app-footer p{margin:0!important;overflow:hidden;text-overflow:elli
   const hasSt=(f,slug)=>Array.isArray(f)?f.some(x=>tail(x)===slug):tail(f)===slug;
   const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
-  // 時(1-2桁)+運用(2桁)+社局 に分解し、同時間帯-1 / +1時間-1(0時跨ぎ含む)の候補を生成
   function parseTrainParts(num){
     const m=coreNum(num).match(/^(\d{1,2})(\d{2})(SH|[THKNAC])$/i);
     if(!m)return null;
@@ -464,7 +463,7 @@ body.is-3col .app-footer p{margin:0!important;overflow:hidden;text-overflow:elli
     const cKey=svcDateKey(cal);
     try{
       const cached=JSON.parse(localStorage.getItem(TT_CACHE_KEY)||"null");
-      if(cached&&cached.key===cKey&&Array.isArray(cached.recs)&&cached.recs.length>50){
+      if(cached&&cached.key===cKey&&(Date.now()-(cached.savedAt||0)<14400000)&&Array.isArray(cached.recs)&&cached.recs.length>50){
         ttByNum.clear();ttByCore.clear();nishiByOp.clear();nishiDepByOp.clear();oshiDepByOp.clear();
         cached.recs.forEach(rec=>{
           ttByNum.set(rec.num,rec);
@@ -519,7 +518,7 @@ body.is-3col .app-footer p{margin:0!important;overflow:hidden;text-overflow:elli
         const recs=Array.from(ttByNum.values());
         if(recs.length>50){
           localStorage.setItem(TT_CACHE_KEY,JSON.stringify({
-            key:cKey,recs,senga:Array.from(sengaMap.values()).filter(x=>!x.isManual)
+            key:cKey,savedAt:Date.now(),recs,senga:Array.from(sengaMap.values()).filter(x=>!x.isManual)
           }));
         }
       }catch(e){}
@@ -538,10 +537,23 @@ body.is-3col .app-footer p{margin:0!important;overflow:hidden;text-overflow:elli
 
   function nextNishi(t){
     if(!ttReady)return{text:"...",train:null,none:true};
-    const num=t["odpt:trainNumber"]||"",nowM=nowSvcMin(),cur=findTT(num);
-    if(cur&&cur.na&&cur.nm>=nowM-45)return{text:cur.na,train:cur.num||num,none:false};
+    const num=t["odpt:trainNumber"]||"",nowM=nowSvcMin(),cn=coreNum(num);
+    const destIsNishi=hasSt(t["odpt:destinationStation"],"NishiMagome");
+    const dir=dirOf(t);
+
+    // リアルタイムの行先が西馬込行きのときのみ「この列車自身の西馬込着」を採用
+    if(destIsNishi){
+      const cur=findTT(num);
+      if(cur&&cur.na&&cur.nm>=nowM-45)return{text:cur.na,train:cur.num||num,none:false};
+    }
+
+    // 別運用(折り返し便)の西馬込着を探す。現在列車と同じ番号や、京急直通等からの非現実的な近接時刻は除外
     const op=opCode(num);
-    if(op&&nishiByOp.has(op)){const hit=nishiByOp.get(op).find(x=>x.min>=nowM-3);if(hit)return{text:hit.time,train:hit.num,none:false}}
+    if(op&&nishiByOp.has(op)){
+      const minGap=(dir==="south"&&!destIsNishi)?25:(destIsNishi?-3:15);
+      const hit=nishiByOp.get(op).find(x=>x.min>=nowM+minGap&&(destIsNishi||coreNum(x.num)!==cn));
+      if(hit)return{text:hit.time,train:hit.num,none:false};
+    }
     return{text:"-",train:null,none:true};
   }
 
@@ -605,7 +617,6 @@ body.is-3col .app-footer p{margin:0!important;overflow:hidden;text-overflow:elli
       }
     });
 
-    // 同時間帯-1（2114T）と+1時間繰り上がり-1（2214T等）の両方を消去対象にする
     const shouldKeep=s=>{
       if(sidingMatchesSouth(s.origNum,southCores))return false;
       const op=opCode(s.origNum);if(op&&southOps.has(op))return false;
