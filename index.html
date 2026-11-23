@@ -7,31 +7,32 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>都営浅草線 リアルタイム在線位置</title>
 <style>
-:root{--bg:#131314;--hd:rgba(24,25,27,.94);--sf:#1E1F20;--cd:#28292C;--cdt:#2F1E28;--bd:#3C4043;--bds:#5F6368;--tx:#E8EAED;--txs:#9AA0A6;--txm:#80868B;--rose:#E85298;--roseb:#F472B6;--rosed:#BE185D;--glow:rgba(232,82,152,.35);--red:#F87171;--rbg:rgba(220,38,38,.2);--rbd:rgba(248,113,113,.5);--cyan:#67E8F9}
+:root{--bg:#131314;--hd:rgba(24,25,27,.94);--sf:#1E1F20;--cd:#28292C;--cdt:#2F1E28;--bd:#3C4043;--bds:#5F6368;--tx:#E8EAED;--txs:#9AA0A6;--txm:#80868B;--rose:#E85298;--roseb:#F472B6;--rosed:#BE185D;--glow:rgba(232,82,152,.35);--red:#F87171;--rbg:rgba(220,38,38,.2);--rbd:rgba(248,113,113,.5);--cyan:#67E8F9;--yel:#FDE047;--ybg:rgba(234,179,8,.16);--ybd:rgba(250,204,21,.5)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",Meiryo,sans-serif;line-height:1.4;-webkit-font-smoothing:antialiased;color-scheme:dark}
 .app-header{position:sticky;top:0;z-index:50;background:var(--hd);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--bd);padding-top:env(safe-area-inset-top)}
-.header-top{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;gap:6px}
-.title-group{display:flex;align-items:center;gap:8px;min-width:0}
-.line-symbol{width:26px;height:26px;border-radius:50%;border:3px solid var(--rose);background:var(--sf);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex-shrink:0}
-.title-texts{min-width:0}
-.app-title{margin:0;font-size:15px;font-weight:700;display:flex;align-items:center;gap:5px;white-space:nowrap}
-.train-count-pill{font-size:10.5px;font-weight:700;background:rgba(232,82,152,.18);color:var(--roseb);border:1px solid rgba(232,82,152,.45);padding:1px 6px;border-radius:999px}
-.last-updated{font-size:10.5px;color:var(--txs);margin-top:1px;font-variant-numeric:tabular-nums}
+.header-top{display:flex;align-items:center;justify-content:space-between;padding:8px 8px;gap:4px}
+.title-group{display:flex;align-items:center;gap:6px;min-width:0;flex:1}
+.line-symbol{width:24px;height:24px;border-radius:50%;border:3px solid var(--rose);background:var(--sf);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;flex-shrink:0}
+.title-texts{min-width:0;overflow:hidden}
+.app-title{margin:0;font-size:13.5px;font-weight:700;display:flex;align-items:center;flex-wrap:wrap;gap:3px;white-space:nowrap}
+.rev-tag{font-size:8.5px;font-weight:600;color:var(--txs);letter-spacing:-.04em;white-space:nowrap}
+.train-count-pill{font-size:9.5px;font-weight:700;background:rgba(232,82,152,.18);color:var(--roseb);border:1px solid rgba(232,82,152,.45);padding:1px 5px;border-radius:999px;flex-shrink:0}
+.last-updated{font-size:10px;color:var(--txs);margin-top:1px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .header-inline-legend{display:none}
-.header-controls{display:flex;align-items:center;gap:6px;flex-shrink:0}
-.layout-btn{appearance:none;border:1px solid var(--bds);background:var(--cd);color:var(--tx);font-size:11px;font-weight:700;padding:6px 8px;min-height:34px;border-radius:8px;cursor:pointer;touch-action:manipulation;white-space:nowrap}
-.auto-toggle{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;user-select:none}
-.toggle-label-text{font-size:9px;font-weight:600;color:var(--txs);font-variant-numeric:tabular-nums}
-.toggle-switch{position:relative;width:38px;height:20px;background:#3C4043;border-radius:999px;transition:background-color .2s}
-.toggle-switch::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;background:var(--tx);border-radius:50%;transition:transform .2s}
+.header-controls{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.layout-btn{appearance:none;border:1px solid var(--bds);background:var(--cd);color:var(--tx);font-size:10.5px;font-weight:700;padding:5px 7px;min-height:32px;border-radius:8px;cursor:pointer;touch-action:manipulation;white-space:nowrap}
+.auto-toggle{display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;user-select:none}
+.toggle-label-text{font-size:8.5px;font-weight:600;color:var(--txs);font-variant-numeric:tabular-nums}
+.toggle-switch{position:relative;width:34px;height:18px;background:#3C4043;border-radius:999px;transition:background-color .2s}
+.toggle-switch::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;background:var(--tx);border-radius:50%;transition:transform .2s}
 .auto-toggle input{position:absolute;opacity:0;width:0;height:0}
 .auto-toggle input:checked+.toggle-switch{background:var(--rose)}
-.auto-toggle input:checked+.toggle-switch::after{transform:translateX(18px);background:#fff}
-.refresh-btn{appearance:none;border:none;background:var(--rose);color:#fff;font-size:12px;font-weight:700;padding:7px 10px;min-height:34px;border-radius:9px;display:inline-flex;align-items:center;gap:4px;cursor:pointer;box-shadow:0 2px 8px var(--glow);touch-action:manipulation}
+.auto-toggle input:checked+.toggle-switch::after{transform:translateX(16px);background:#fff}
+.refresh-btn{appearance:none;border:none;background:var(--rose);color:#fff;font-size:11.5px;font-weight:700;padding:6px 9px;min-height:32px;border-radius:8px;display:inline-flex;align-items:center;gap:3px;cursor:pointer;box-shadow:0 2px 8px var(--glow);touch-action:manipulation}
 .refresh-btn:active{transform:scale(.96);background:var(--rosed)}
 .refresh-btn:disabled{opacity:.65}
-.refresh-icon{width:13px;height:13px}
+.refresh-icon{width:12px;height:12px}
 .is-loading .refresh-icon{animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .direction-bar{display:grid;grid-template-columns:1fr 82px 1fr;align-items:center;background:var(--sf);border-top:1px solid var(--bd);padding:5px 4px;font-size:11px;font-weight:700;text-align:center}
@@ -52,6 +53,7 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--tx);font-family:-a
 .track-col.left{align-items:flex-end}.track-col.right{align-items:flex-start}
 .bay-guide{font-size:8.5px;font-weight:700;color:var(--txs);line-height:1;padding:0 2px;opacity:.85}
 .empty-bay-slot{width:100%;height:22px;border:1px dashed var(--bd);border-radius:7px;background:rgba(30,31,32,.5);display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:600;color:#747980}
+.empty-bay-slot.siding{border-color:#4B5563;color:#8B929A;background:rgba(20,22,26,.65)}
 .center-col{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .center-col::before{content:"";position:absolute;top:0;bottom:0;left:50%;width:6px;transform:translateX(-50%);background:var(--rose);z-index:1}
 .station-row.first-station .center-col::before{top:50%}
@@ -71,6 +73,10 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--tx);font-family:-a
 .train-badge.is-stopped{border-style:solid}.train-badge.is-running{border-style:dashed}
 .train-badge.is-other{border-color:#6E747C}.train-badge.is-other.is-running{border-color:var(--txs)}
 .train-badge.is-toei{background:var(--cdt);border-width:2.5px;border-color:var(--rose);box-shadow:0 0 0 1px rgba(232,82,152,.28),0 0 12px var(--glow)}
+.train-badge.is-siding{border-style:dotted;border-color:#F59E0B;background:#24211A}
+.train-badge.is-siding.is-toei{border-color:var(--rose);background:#2C1E25}
+.train-badge.is-pre{border-style:dotted;border-color:#38BDF8;background:#1A242B;opacity:.92}
+.train-badge.is-pre.is-toei{border-color:var(--rose);background:var(--cdt);opacity:.95}
 .track-col.left .train-badge::after,.track-col.right .train-badge::before{content:"";position:absolute;top:50%;width:5px;height:2px;background:#6E747C}
 .track-col.left .train-badge.is-toei::after,.track-col.right .train-badge.is-toei::before{background:var(--rose);height:2.5px}
 .track-col.left .train-badge::after{right:-6px}.track-col.right .train-badge::before{left:-6px}
@@ -79,16 +85,18 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--tx);font-family:-a
 .train-num-badge{font-size:10.5px;font-weight:900;color:#000;background:#E8EAED;border:1px solid #000;padding:.5px 5px;border-radius:4px;line-height:1.25;font-variant-numeric:tabular-nums;white-space:nowrap}
 .type-local{background:#4B5563}.type-express{background:#2563EB}.type-limited{background:#DC2626}.type-rapid{background:#16A34A}
 .type-airport{background:#EA580C}.type-access{background:#9333EA}.type-commuter{background:#D97706}.type-liner{background:#0F172A;border:1px solid #64748B}.type-unknown{background:#5F6368}
-.badge-row-mid{display:flex;align-items:flex-start;justify-content:space-between;gap:4px;font-size:12px;font-weight:700;color:var(--tx);line-height:1.25}
-.dest-wrap{display:flex;align-items:flex-start;gap:2px;min-width:0}
+.badge-row-mid{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:2px 4px;font-size:12px;font-weight:700;color:var(--tx);line-height:1.25}
+.dest-wrap{display:flex;align-items:flex-start;gap:2px;min-width:68px;flex:1 1 auto}
 .dir-arrow{font-size:11.5px;font-weight:900;flex-shrink:0;margin-top:1px}
 .dir-arrow.north{color:var(--roseb)}.dir-arrow.south{color:#8AB4F8}
-.dest-name{white-space:normal;word-break:break-word}
+.dest-name{white-space:normal;word-break:keep-all;overflow-wrap:anywhere}
+.eta-group{display:flex;align-items:center;flex-wrap:wrap;gap:2px;flex-shrink:0}
 .nishi-eta{font-size:10px;font-weight:800;color:var(--cyan);background:rgba(103,232,249,.12);border:1px solid rgba(103,232,249,.35);padding:1px 4px;border-radius:4px;white-space:nowrap;flex-shrink:0;font-variant-numeric:tabular-nums}
 .nishi-eta.none{color:var(--txm);background:rgba(128,134,139,.12);border-color:rgba(128,134,139,.3)}
+.dep-eta{font-size:10px;font-weight:800;color:var(--yel);background:var(--ybg);border:1px solid var(--ybd);padding:1px 4px;border-radius:4px;white-space:nowrap;flex-shrink:0;font-variant-numeric:tabular-nums}
 .badge-row-bottom{display:flex;align-items:center;justify-content:space-between;gap:4px;font-size:9.5px;color:var(--txs)}
-.status-chips{display:flex;align-items:center;gap:4px}
-.state-label{font-weight:600}.state-label.running{color:var(--roseb)}
+.status-chips{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.state-label{font-weight:600}.state-label.running{color:var(--roseb)}.state-label.siding{color:#FBBF24}.state-label.pre{color:#38BDF8}
 .toei-owner-chip{font-size:9px;font-weight:800;color:var(--roseb);background:rgba(232,82,152,.18);padding:0 4px;border-radius:3px}
 .track-num-chip{font-size:9px;font-weight:800;color:#E8EAED;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);padding:0 4px;border-radius:3px}
 .delay-tag{font-size:10px;font-weight:800;color:var(--red);background:var(--rbg);border:1px solid var(--rbd);padding:0 4px;border-radius:4px;white-space:nowrap;font-variant-numeric:tabular-nums}
@@ -117,13 +125,14 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--tx);font-family:-a
 .detail-value.delay-highlight{color:var(--red)}
 .owner-pill{display:inline-block;padding:2px 8px;border-radius:6px;font-size:12px;background:var(--cd);border:1px solid var(--bd)}
 .owner-pill.toei{border-color:var(--rose);color:var(--roseb);background:rgba(232,82,152,.15)}
+.siding-clear-btn{margin-top:12px;width:100%;appearance:none;border:1px solid #F59E0B;background:rgba(245,158,11,.15);color:#FBBF24;font-size:13px;font-weight:700;padding:9px;border-radius:10px;cursor:pointer}
 
 body.is-3col{height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column}
 body.is-3col .app-header{position:static;flex-shrink:0}
 body.is-3col .header-top{padding:5px 12px}
 body.is-3col .direction-bar,body.is-3col .route-cap,body.is-3col .legend-box{display:none}
 body.is-3col .header-inline-legend{display:flex;align-items:center;gap:10px;font-size:10px;color:var(--txs)}
-body.is-3col .main-container{max-width:none;width:100%;flex:1;min-height:0;padding:5px 6px 3px;display:flex;flex-direction:column}
+body.is-3col .main-container{max-width:none;width:100%;flex:1;min-height:0;padding:4px 6px 3px;display:flex;flex-direction:column}
 body.is-3col .empty-state-card{margin:0 0 6px;padding:8px 12px}
 body.is-3col .route-map{flex:1;min-height:0;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 body.is-3col .route-column{display:flex;flex-direction:column;justify-content:space-between;background:rgba(30,31,32,.45);border:1px solid #2A2B2E;border-radius:10px;padding:3px 3px 4px;min-height:0;overflow-y:auto}
@@ -131,10 +140,10 @@ body.is-3col .col-header{display:grid;grid-template-columns:1fr 64px 1fr;align-i
 body.is-3col .col-header-center{color:var(--txs);font-size:9px}
 body.is-3col .col-continue-badge{display:flex;justify-content:center;font-size:8.5px;font-weight:700;color:var(--txm);padding:1px 0;flex-shrink:0}
 body.is-3col .station-row,body.is-3col .segment-row{grid-template-columns:1fr 64px 1fr}
-body.is-3col .station-row{min-height:32px}
-body.is-3col .station-row.is-double-track{min-height:48px;padding:1px 0}
-body.is-3col .segment-row{min-height:6px}
-body.is-3col .segment-row.has-trains{min-height:38px;padding:2px 0}
+body.is-3col .station-row{min-height:30px}
+body.is-3col .station-row.is-double-track{min-height:46px;padding:1px 0}
+body.is-3col .segment-row{min-height:5px}
+body.is-3col .segment-row.has-trains{min-height:36px;padding:2px 0}
 body.is-3col .route-column .segment-row.col-tail-segment:not(.has-trains){display:none}
 body.is-3col .track-col{padding:1px 2px;gap:2px}
 body.is-3col .bay-guide{font-size:7.5px}
@@ -142,14 +151,14 @@ body.is-3col .station-node{width:60px;padding:2px;border-radius:7px}
 body.is-3col .st-name{font-size:10.5px}
 body.is-3col .st-name.is-long{font-size:9px}
 body.is-3col .st-note{font-size:7px;margin-top:1px}
-body.is-3col .empty-bay-slot{height:16px;font-size:8px;border-radius:5px}
-body.is-3col .train-badge{padding:2.5px 4px;gap:1.5px;border-radius:6px}
+body.is-3col .empty-bay-slot{height:15px;font-size:7.5px;border-radius:5px}
+body.is-3col .train-badge{padding:2px 4px;gap:1.5px;border-radius:6px}
 body.is-3col .badge-row-top{gap:2.5px}
 body.is-3col .train-type-chip{font-size:8.5px;padding:1px 3.5px}
 body.is-3col .train-num-badge{font-size:9px;padding:0 3.5px}
 body.is-3col .badge-row-mid{font-size:10.5px;line-height:1.15}
 body.is-3col .dir-arrow{font-size:10px}
-body.is-3col .nishi-eta{font-size:8.5px;padding:0 3px}
+body.is-3col .nishi-eta,body.is-3col .dep-eta{font-size:8.5px;padding:0 3px}
 body.is-3col .badge-row-bottom{font-size:8px}
 body.is-3col .toei-owner-chip,body.is-3col .track-num-chip{font-size:7.5px}
 body.is-3col .delay-tag{font-size:8.5px}
@@ -163,7 +172,7 @@ body.is-3col .app-footer p{margin:0!important;overflow:hidden;text-overflow:elli
     <div class="title-group">
       <div class="line-symbol">A</div>
       <div class="title-texts">
-        <h1 class="app-title">都営浅草線 <span class="train-count-pill" id="trainCountPill">-- 列車</span></h1>
+        <h1 class="app-title"><span>都営浅草線</span><span class="rev-tag">2026年11月改正</span><span class="train-count-pill" id="trainCountPill">--本</span></h1>
         <div class="last-updated" id="lastUpdated">取得中...</div>
       </div>
     </div>
@@ -171,10 +180,11 @@ body.is-3col .app-footer p{margin:0!important;overflow:hidden;text-overflow:elli
       <div class="legend-item"><span class="legend-sample-stop"></span><span>停車</span></div>
       <div class="legend-item"><span class="legend-sample-run"></span><span>走行</span></div>
       <div class="legend-item"><span class="legend-sample-toei"></span><span>都営車</span></div>
-      <div class="legend-item"><span style="color:var(--cyan);font-weight:700">西 HH:MM</span><span>直近西馬込着</span></div>
+      <div class="legend-item"><span style="color:var(--cyan);font-weight:700">西 HH:MM</span><span>西馬込着</span></div>
+      <div class="legend-item"><span style="color:var(--yel);font-weight:700">西/押 HH:MM発</span><span>発車</span></div>
     </div>
     <div class="header-controls">
-      <button type="button" class="layout-btn" id="layoutToggleBtn">3列表示</button>
+      <button type="button" class="layout-btn" id="layoutToggleBtn">3列</button>
       <label class="auto-toggle"><input type="checkbox" id="autoRefreshToggle" checked><span class="toggle-switch"></span><span class="toggle-label-text" id="countdownText">自動 45s</span></label>
       <button type="button" class="refresh-btn" id="manualRefreshBtn">
         <svg class="refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
@@ -198,17 +208,21 @@ body.is-3col .app-footer p{margin:0!important;overflow:hidden;text-overflow:elli
     <div class="legend-item"><span class="legend-sample-stop"></span><span>停車（実線）</span></div>
     <div class="legend-item"><span class="legend-sample-run"></span><span>走行（点線）</span></div>
     <div class="legend-item"><span class="legend-sample-toei"></span><span>都営車（ローズ枠）</span></div>
-    <div class="legend-item"><span style="color:var(--cyan);font-weight:700">西 HH:MM</span><span>直近西馬込着（- はなし）</span></div>
+    <div class="legend-item"><span style="color:var(--cyan);font-weight:700">西 HH:MM</span><span>西馬込着</span></div>
+    <div class="legend-item"><span style="color:var(--yel);font-weight:700">西/押 HH:MM発</span><span>駅発車時刻</span></div>
   </div>
 </main>
 <footer class="app-footer">
   <p style="margin:0 0 4px">出典：公共交通オープンデータセンター（ODPT）提供データ（東京都交通局）</p>
-  <p style="margin:0">※押上・西馬込の着番線は非公開のため枠表示は目安です。事業者への直接のお問い合わせはご遠慮ください。</p>
+  <p style="margin:0">※引き上げ線・押上/西馬込番線は推定表示です。事業者への直接のお問い合わせはご遠慮ください。</p>
 </footer>
 <div id="trainModal" class="modal-backdrop" role="dialog" aria-modal="true">
   <div class="modal-sheet">
     <div class="modal-header"><h2 class="modal-title" id="modalTitle">列車詳細</h2><button type="button" class="modal-close" id="modalCloseBtn">×</button></div>
-    <div class="modal-body"><ul class="detail-list" id="modalDetailList"></ul></div>
+    <div class="modal-body">
+      <ul class="detail-list" id="modalDetailList"></ul>
+      <div id="modalExtraAction"></div>
+    </div>
   </div>
 </div>
 <script>
@@ -216,13 +230,49 @@ body.is-3col .app-footer p{margin:0!important;overflow:hidden;text-overflow:elli
   "use strict";
   const API="https://api-public.odpt.org/api/v4/odpt:Train?odpt:operator=odpt.Operator:Toei&odpt:railway=odpt.Railway:Toei.Asakusa";
   const TT_BASE="https://api-public.odpt.org/api/v4/odpt:TrainTimetable?odpt:operator=odpt.Operator:Toei&odpt:railway=odpt.Railway:Toei.Asakusa&odpt:calendar=odpt.Calendar:";
-  const SEC=45,P="odpt.Station:Toei.Asakusa.",NISHI_ID=P+"NishiMagome",SENGA_ID=P+"Sengakuji";
+  const ST_TT_BASE="https://api-public.odpt.org/api/v4/odpt:StationTimetable?odpt:operator=odpt.Operator:Toei&odpt:station=odpt.Station:Toei.Asakusa.";
+  const SEC=45,P="odpt.Station:Toei.Asakusa.",NISHI_ID=P+"NishiMagome",SENGA_ID=P+"Sengakuji",ASAKUSABASHI_ID=P+"Asakusabashi",OSHI_ID=P+"Oshiage";
+  const SIDING_KEY="asakusa_siding_v1";
+
+  // 泉岳寺1番線 始発ダイヤ（手動補完リスト）
+  const SENGA_MANUAL={
+    Weekday:[
+      "05:49 514T 快特 羽田空港","05:58 576H 特急 三崎口","06:16 650SH 快特 羽田空港","06:34 682H 特急 三崎口",
+      "06:47 618C 特急 浦賀","07:11 728H 特急 三崎口","07:26 710T 急行 羽田空港","10:35 1004A 快特 三崎口",
+      "10:57 1002A 快特 京急久里浜","11:17 1114A 快特 京急久里浜","11:37 1106A 快特 京急久里浜","11:57 1108A 快特 京急久里浜",
+      "12:17 1210A 快特 京急久里浜","12:37 1212A 快特 京急久里浜","12:57 1200A 快特 京急久里浜","13:17 1302A 快特 京急久里浜",
+      "13:37 1304A 快特 三崎口","13:57 1306A 快特 京急久里浜","14:17 1408A 快特 京急久里浜","14:37 1410A 快特 京急久里浜",
+      "14:57 1412A 快特 京急久里浜","15:17 1500A 快特 京急久里浜","15:37 1502A 快特 京急久里浜","15:56 1514A 快特 京急久里浜",
+      "16:06 1626T 特急 羽田空港","16:46 1686H 急行 羽田空港","17:26 1700K 特急 京急久里浜","17:31 1754T 急行 羽田空港",
+      "19:32 1966K 急行 羽田空港","19:41 1970K 急行 羽田空港","21:00 2162H 急行 羽田空港","21:40 2186K 急行 羽田空港",
+      "22:12 2280H 急行 羽田空港","22:34 2234N 急行 羽田空港","22:59 2228H 特急 京急久里浜","23:22 2368H 特急 京急久里浜",
+      "23:41 2350H 特急 逗子・葉山","23:59 2374H 特急 金沢文庫"
+    ],
+    SaturdayHoliday:[
+      "05:58 514H 急行 羽田空港","06:19 652H 急行 羽田空港","06:37 628H 急行 羽田空港","06:54 658H 特急 京急久里浜",
+      "08:20 820N 急行 羽田空港","08:45 806A 快特 三崎口","09:06 908A 快特 三崎口","09:25 910A 快特 三崎口",
+      "09:56 914A 快特 三崎口","10:17 1000A 快特 三崎口","10:37 1002A 快特 三崎口","10:57 1004A 快特 京急久里浜",
+      "11:17 1130A 快特 三崎口","11:37 1106A 快特 三崎口","11:57 1108A 快特 京急久里浜","12:17 1210A 快特 三崎口",
+      "12:37 1212A 快特 三崎口","12:57 1214A 快特 三崎口","13:17 1300A 快特 三崎口","13:37 1302A 快特 三崎口",
+      "13:57 1304A 快特 三崎口","14:17 1430A 快特 三崎口","14:37 1406A 快特 三崎口","14:57 1408A 快特 三崎口",
+      "15:17 1510A 快特 三崎口","15:37 1512A 快特 三崎口","15:57 1514A 快特 三崎口","16:17 1600A 快特 三崎口",
+      "16:37 1602A 快特 京急久里浜","16:57 1604A 快特 三崎口","17:17 1730A 快特 三崎口","17:37 1706A 快特 京急久里浜",
+      "17:57 1708A 快特 京急久里浜","18:17 1810A 快特 京急久里浜","18:37 1812A 快特 京急久里浜","18:57 1814A 快特 三崎口",
+      "19:16 1900C 特急 京急久里浜","19:37 1926H 特急 三崎口","19:56 1904C 特急 京急久里浜","20:16 2050H 特急 京急久里浜",
+      "20:36 2066H 特急 三崎口","20:56 2054H 特急 京急久里浜","21:16 2174H 特急 京急久里浜","22:07 2240T 特急 逗子・葉山",
+      "22:40 2286K 急行 羽田空港","00:08 2412T 普通 品川"
+    ]
+  };
+  const JP_TYPE={"普通":"odpt.TrainType:Toei.Local","急行":"odpt.TrainType:Toei.Express","特急":"odpt.TrainType:Toei.LimitedExpress","快特":"odpt.TrainType:Toei.Rapid","エアポート快特":"odpt.TrainType:Toei.AirportLimitedExpress","アクセス特急":"odpt.TrainType:Toei.AccessExpress"};
+
   const ST=[
     ["西馬込","NishiMagome","1・2番線 始発終点",1,["1番線枠","2番線枠"],["1番線折返枠","2番線折返枠"],"1・2番線","1・2番線"],
     ["馬込","Magome","",0],["中延","Nakanobu","",0],["戸越","Togoshi","",0],["五反田","Gotanda","",0],["高輪台","Takanawadai","",0],
-    ["泉岳寺","Sengakuji","1-4番線 京急直通",1,["1番線","2番線"],["3番線","4番線"],"1・2番線","3・4番線"],
+    ["泉岳寺","Sengakuji","1-4番線+引上",1,["1番線","2番線"],["3番線","4番線"],"1・2番線・引上","3・4番線"],
     ["三田","Mita","",0],["大門","Daimon","",0],["新橋","Shimbashi","",0],["東銀座","HigashiGinza","",0],["宝町","Takaracho","",0],["日本橋","Nihombashi","",0],
-    ["人形町","Ningyocho","",0],["東日本橋","HigashiNihombashi","",0],["浅草橋","Asakusabashi","",0],["蔵前","Kuramae","",0],["浅草","Asakusa","",0],["本所吾妻橋","HonjoAzumabashi","",0],
+    ["人形町","Ningyocho","",0],["東日本橋","HigashiNihombashi","",0],
+    ["浅草橋","Asakusabashi","引上線あり",0,["1番線枠"],[],"1番線・引上",""],
+    ["蔵前","Kuramae","",0],["浅草","Asakusa","",0],["本所吾妻橋","HonjoAzumabashi","",0],
     ["押上","Oshiage","1-4番線 京成直通",1,["1番線枠","2番線枠"],["3番線枠","4番線枠"],"1・2番線側","3・4番線側"]
   ].map(([name,s,note,dbl,lb,rb,lg,rg])=>({name,id:P+s,note,isDouble:!!dbl,lb,rb,lg,rg}));
   const COLS=[{start:0,end:5,top:"▲ 始点",bot:"▼ 泉岳寺方面へ",tail:1},{start:6,end:12,top:"▲ 高輪台から",bot:"▼ 人形町方面へ",tail:1},{start:13,end:19,top:"▲ 日本橋から",bot:"▼ 京成・北総直通",tail:0}];
@@ -230,30 +280,42 @@ body.is-3col .app-footer p{margin:0!important;overflow:hidden;text-overflow:elli
   const TYPES={Local:["普通","type-local"],Express:["急行","type-express"],LimitedExpress:["特急","type-limited"],Rapid:["快特","type-rapid"],RapidLimitedExpress:["快特","type-rapid"],AirportLimitedExpress:["エアポート快特","type-airport"],AirportRapidLimitedExpress:["エアポート快特","type-airport"],AccessExpress:["アクセス特急","type-access"],CommuterLimitedExpress:["通勤特急","type-commuter"],EveningLiner:["イブニングライナー","type-liner"],MorningLiner:["モーニングライナー","type-liner"],Skyliner:["スカイライナー","type-liner"]};
   const NAMES={NishiMagome:"西馬込",Magome:"馬込",Nakanobu:"中延",Togoshi:"戸越",Gotanda:"五反田",Takanawadai:"高輪台",Sengakuji:"泉岳寺",Mita:"三田",Daimon:"大門",Shimbashi:"新橋",HigashiGinza:"東銀座",Takaracho:"宝町",Nihombashi:"日本橋",Ningyocho:"人形町",HigashiNihombashi:"東日本橋",Asakusabashi:"浅草橋",Kuramae:"蔵前",Asakusa:"浅草",HonjoAzumabashi:"本所吾妻橋",Oshiage:"押上",HanedaAirportTerminal1and2:"羽田空港",HanedaAirportDomesticTerminal:"羽田空港",HanedaAirportTerminal3:"羽田空港第3T",HanedaAirportInternationalTerminal:"羽田空港国際",Shinagawa:"品川",KeikyuKamata:"京急蒲田",KeikyuKawasaki:"京急川崎",KanagawaShimmachi:"神奈川新町",Yokohama:"横浜",Kamiooka:"上大岡",KanazawaBunko:"金沢文庫",KanazawaHakkei:"金沢八景",ZushiHayama:"逗子・葉山",ShinZushi:"逗子・葉山",Horinouchi:"堀ノ内",Uraga:"浦賀",KeikyuKurihama:"京急久里浜",Miurakaigan:"三浦海岸",Misakiguchi:"三崎口",KeiseiHikifune:"京成曳舟",Yotsugi:"四ツ木",KeiseiTateishi:"京成立石",Aoto:"青砥",Takasago:"京成高砂",KeiseiTakasago:"京成高砂",KeiseiYawata:"京成八幡",HigashiNakayama:"東中山",KeiseiFunabashi:"京成船橋",KeiseiTsudanuma:"京成津田沼",Yachiyodai:"八千代台",Katsutadai:"勝田台",KeiseiSakura:"京成佐倉",Sogosando:"宗吾参道",KeiseiNarita:"京成成田",NaritaAirportTerminal1:"成田空港",SANaritaAirportTerminal1:"成田空港",AirportTerminal2:"空港第2ビル",NaritaAirportTerminal2and3:"空港第2ビル",HigashiNarita:"東成田",ShibayamaChiyoda:"芝山千代田",KeiseiUeno:"京成上野",KeiseiKanamachi:"京成金町",HigashiMatsudo:"東松戸",ShinKamagaya:"新鎌ヶ谷",ChibaNewTownChuo:"千葉ニュータウン中央",InzaiMakinohara:"印西牧の原",InbaNihonIdai:"印旛日本医大",ImbaNihonIdai:"印旛日本医大"};
   const OWNERS={Toei:"東京都交通局（都営車）",Keikyu:"京浜急行電鉄（京急車）",Keisei:"京成電鉄（京成車）",Hokuso:"北総鉄道（北総車）",Shibayama:"芝山鉄道"};
-  const SFX={T:"東京都交通局（都営車・末尾T）",H:"京浜急行電鉄（京急車・末尾H）",K:"京成電鉄（京成車・末尾K）",N:"北総鉄道（北総車・末尾N）"};
+  const SFX={T:"東京都交通局（都営車・末尾T）",H:"京浜急行電鉄（京急車・末尾H）",A:"京浜急行電鉄（京急車・末尾A）",C:"京浜急行電鉄（京急車・末尾C）",SH:"京浜急行電鉄（京急車・末尾SH）",K:"京成電鉄（京成車・末尾K）",N:"北総鉄道（北総車・末尾N）"};
 
   const $=id=>document.getElementById(id);
-  const mapEl=$("routeMap"),empEl=$("emptyStateContainer"),cntEl=$("trainCountPill"),updEl=$("lastUpdated"),refBtn=$("manualRefreshBtn"),layBtn=$("layoutToggleBtn"),autoTg=$("autoRefreshToggle"),cdEl=$("countdownText"),banEl=$("statusBanner"),banMsg=$("statusBannerMsg"),retBtn=$("retryBtn"),modEl=$("trainModal"),modTit=$("modalTitle"),modList=$("modalDetailList"),modCls=$("modalCloseBtn");
-  let fetching=false,autoOn=true,leftSec=SEC,lastOk=null,manLay=null,ttReady=false,lastTrains=[];
-  const ttByNum=new Map(),nishiByOp=new Map();
+  const mapEl=$("routeMap"),empEl=$("emptyStateContainer"),cntEl=$("trainCountPill"),updEl=$("lastUpdated"),refBtn=$("manualRefreshBtn"),layBtn=$("layoutToggleBtn"),autoTg=$("autoRefreshToggle"),cdEl=$("countdownText"),banEl=$("statusBanner"),banMsg=$("statusBannerMsg"),retBtn=$("retryBtn"),modEl=$("trainModal"),modTit=$("modalTitle"),modList=$("modalDetailList"),modAct=$("modalExtraAction"),modCls=$("modalCloseBtn");
+
+  let fetching=false,autoOn=true,leftSec=SEC,lastOk=null,manLay=null,ttReady=false,lastTrains=[],hasPrevSnap=false;
+  const ttByNum=new Map(),ttByCore=new Map(),nishiByOp=new Map(),nishiDepByOp=new Map(),oshiDepByOp=new Map();
+  let sengaOrigins=[];
+  const prevTrainMap=new Map();
+  let sidings={sengakuji:[],asakusabashi:[]};
+
+  try{const sv=JSON.parse(localStorage.getItem(SIDING_KEY)||"null");if(sv&&Array.isArray(sv.sengakuji)&&Array.isArray(sv.asakusabashi))sidings=sv}catch(e){}
+  const saveSidings=()=>{try{localStorage.setItem(SIDING_KEY,JSON.stringify(sidings))}catch(e){}};
 
   const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
   const tail=id=>typeof id==="string"?(id.split(/[.:]/).pop()||id):"";
   const camel=t=>t?t.replace(/([a-z])([A-Z])/g,"$1 $2").replace(/([A-Z]+)([A-Z][a-z])/g,"$1 $2"):"不明";
   const trType=id=>{const t=tail(id);return TYPES[t]?{l:TYPES[t][0],c:TYPES[t][1]}:{l:t?camel(t):"種別不明",c:"type-unknown"}};
-  const trSt=id=>{const t=tail(id);return NAMES[t]||(t?camel(t):"不明")};
+  const trSt=id=>{if(!id)return"不明";if(/[^\x00-\x7F]/.test(id))return id;const t=tail(id);return NAMES[t]||(t?camel(t):"不明")};
   const fmtDest=f=>{if(!f)return"行先不明";const n=(Array.isArray(f)?f:[f]).map(trSt).filter(Boolean);return n.length?n.join("・"):"行先不明"};
-  const isToei=t=>{const o=t["odpt:trainOwner"]||"";if(o)return tail(o)==="Toei";const m=(t["odpt:trainNumber"]||"").match(/([THKN])[a-z]?$/i);return!!(m&&m[1].toUpperCase()==="T")};
-  const ownerLbl=t=>{const o=t["odpt:trainOwner"];if(o&&OWNERS[tail(o)])return OWNERS[tail(o)];const m=(t["odpt:trainNumber"]||"").match(/([THKN])[a-z]?$/i);return m&&SFX[m[1].toUpperCase()]?SFX[m[1].toUpperCase()]:"不明（直通車両等）"};
+  const matchOwnerKey=num=>String(num||"").match(/(SH|[THKNAC])[a-z]?$/i);
+  const isToei=t=>{const o=t["odpt:trainOwner"]||"";if(o)return tail(o)==="Toei";const m=matchOwnerKey(t["odpt:trainNumber"]);return!!(m&&m[1].toUpperCase()==="T")};
+  const ownerLbl=t=>{const o=t["odpt:trainOwner"];if(o&&OWNERS[tail(o)])return OWNERS[tail(o)];const m=matchOwnerKey(t["odpt:trainNumber"]);return m&&SFX[m[1].toUpperCase()]?SFX[m[1].toUpperCase()]:"不明（直通車両等）"};
   const dlyMin=s=>(typeof s==="number"&&s>=60)?Math.floor(s/60):0;
   const fmtTime=d=>[d.getHours(),d.getMinutes(),d.getSeconds()].map(v=>String(v).padStart(2,"0")).join(":");
-  const opCode=num=>{const m=String(num||"").match(/(\d{2})([THKN])[a-z]?$/i);return m?(m[1]+m[2].toUpperCase()):""};
+  const opCode=num=>{const m=String(num||"").match(/(\d{2})(SH|[THKNAC])[a-z]?$/i);return m?(m[1]+m[2].toUpperCase()):""};
+  const coreNum=num=>{const m=String(num||"").match(/^(\d+)(SH|[THKNAC])/i);return m?(m[1]+m[2].toUpperCase()):String(num||"").toUpperCase()};
+  const minusOneCore=num=>{const m=String(num||"").match(/^(\d+)(SH|[THKNAC])/i);if(!m)return"";const n=parseInt(m[1],10);if(isNaN(n)||n<=1)return"";return String(n-1).padStart(m[1].length,"0")+m[2].toUpperCase()};
   const toSvcMin=hm=>{if(!hm)return null;const[h,m]=hm.split(":").map(Number);return isNaN(h)||isNaN(m)?null:(h<4?h+24:h)*60+m};
   const nowSvcMin=()=>{const h=new Date().getHours();return(h<4?h+24:h)*60+new Date().getMinutes()};
-  const hasNishi=f=>Array.isArray(f)?f.some(x=>tail(x)==="NishiMagome"):tail(f)==="NishiMagome";
+  const hasSt=(f,slug)=>Array.isArray(f)?f.some(x=>tail(x)===slug):tail(f)===slug;
 
   function guessCal(){
-    const d=new Date(),w=d.getDay(),m=d.getMonth()+1,dt=d.getDate(),y=d.getFullYear();
+    const d=new Date();
+    if(d.getHours()<4)d.setDate(d.getDate()-1);
+    const w=d.getDay(),m=d.getMonth()+1,dt=d.getDate(),y=d.getFullYear();
     if(w===0||w===6)return"SaturdayHoliday";
     if([[1,1],[2,11],[2,23],[4,29],[5,3],[5,4],[5,5],[8,11],[11,3],[11,23]].some(([a,b])=>a===m&&b===dt))return"SaturdayHoliday";
     if([1,7,9,10].some((mo,i)=>m===mo&&w===1&&Math.ceil(dt/7)===[2,3,3,2][i]))return"SaturdayHoliday";
@@ -261,45 +323,166 @@ body.is-3col .app-footer p{margin:0!important;overflow:hidden;text-overflow:elli
     return((m===3&&dt===ve)||(m===9&&dt===au))?"SaturdayHoliday":"Weekday";
   }
 
+  function addDepOp(map,op,num,time){
+    if(!op||!time)return;
+    if(!map.has(op))map.set(op,[]);
+    const list=map.get(op);
+    if(!list.some(x=>x.time===time&&coreNum(x.num)===coreNum(num)))list.push({num,time,min:toSvcMin(time)});
+  }
+
   async function loadTT(cal){
+    const sengaMap=new Map();
+    (SENGA_MANUAL[cal]||[]).forEach(line=>{
+      const parts=line.trim().split(/[\s\u3000]+/);
+      if(parts.length<4)return;
+      const[dep,num,tpName,dest]=parts;
+      const k=coreNum(num)+"_"+dep;
+      sengaMap.set(k,{num,depTime:dep,depMin:toSvcMin(dep),trainType:JP_TYPE[tpName]||"odpt.TrainType:Toei.Local",dest:[dest],origin:[SENGA_ID],targetTrack:1,isManual:true});
+    });
+
     try{
-      const r=await fetch(TT_BASE+cal,{headers:{Accept:"application/json"}});
-      if(!r.ok)return false;
-      const arr=await r.json();if(!Array.isArray(arr))return false;
-      ttByNum.clear();nishiByOp.clear();
-      arr.forEach(tt=>{
-        const num=tt["odpt:trainNumber"];if(!num)return;
-        const objs=Array.isArray(tt["odpt:trainTimetableObject"])?tt["odpt:trainTimetableObject"]:[];
-        const orig=tt["odpt:originStation"]||(objs[0]&&objs[0]["odpt:departureStation"]?[objs[0]["odpt:departureStation"]]:null);
-        let na=null;
-        for(const o of objs){if(o["odpt:arrivalStation"]===NISHI_ID&&o["odpt:arrivalTime"]){na=o["odpt:arrivalTime"];break}}
-        ttByNum.set(num,{origin:orig,na,nm:toSvcMin(na)});
-        if(na){const op=opCode(num);if(op){if(!nishiByOp.has(op))nishiByOp.set(op,[]);nishiByOp.get(op).push({num,time:na,min:toSvcMin(na)})}}
-      });
+      const [r1,rS,rN,rO]=await Promise.all([
+        fetch(TT_BASE+cal,{headers:{Accept:"application/json"}}).catch(()=>null),
+        fetch(ST_TT_BASE+"Sengakuji",{headers:{Accept:"application/json"}}).catch(()=>null),
+        fetch(ST_TT_BASE+"NishiMagome",{headers:{Accept:"application/json"}}).catch(()=>null),
+        fetch(ST_TT_BASE+"Oshiage",{headers:{Accept:"application/json"}}).catch(()=>null)
+      ]);
+      ttByNum.clear();ttByCore.clear();nishiByOp.clear();nishiDepByOp.clear();oshiDepByOp.clear();
+
+      if(r1&&r1.ok){
+        const arr=await r1.json();
+        if(Array.isArray(arr)){
+          arr.forEach(tt=>{
+            const num=tt["odpt:trainNumber"];if(!num)return;
+            const objs=Array.isArray(tt["odpt:trainTimetableObject"])?tt["odpt:trainTimetableObject"]:[];
+            const orig=tt["odpt:originStation"]||(objs[0]&&objs[0]["odpt:departureStation"]?[objs[0]["odpt:departureStation"]]:null);
+            let na=null,nd=null,od=null,sd=null;
+            for(const o of objs){
+              if(!na&&o["odpt:arrivalStation"]===NISHI_ID&&o["odpt:arrivalTime"])na=o["odpt:arrivalTime"];
+              if(!nd&&o["odpt:departureStation"]===NISHI_ID&&o["odpt:departureTime"])nd=o["odpt:departureTime"];
+              if(!od&&o["odpt:departureStation"]===OSHI_ID&&o["odpt:departureTime"])od=o["odpt:departureTime"];
+              if(!sd&&o["odpt:departureStation"]===SENGA_ID&&o["odpt:departureTime"])sd=o["odpt:departureTime"];
+            }
+            const rec={num,origin:orig,na,nm:toSvcMin(na),nd,ndm:toSvcMin(nd),od,odm:toSvcMin(od)};
+            ttByNum.set(num,rec);
+            const cn=coreNum(num);
+            if(cn){if(!ttByCore.has(cn))ttByCore.set(cn,[]);ttByCore.get(cn).push(rec)}
+            const op=opCode(num);
+            if(op){
+              if(na){if(!nishiByOp.has(op))nishiByOp.set(op,[]);nishiByOp.get(op).push({num,time:na,min:toSvcMin(na)})}
+              if(nd)addDepOp(nishiDepByOp,op,num,nd);
+              if(od)addDepOp(oshiDepByOp,op,num,od);
+            }
+            const dirStr=tt["odpt:railDirection"]||"";
+            if(sd&&dirStr.includes("Southbound")&&hasSt(orig,"Sengakuji")){
+              const dst=tt["odpt:destinationStation"],k=cn+"_"+sd;
+              if(!sengaMap.has(k))sengaMap.set(k,{num,depTime:sd,depMin:toSvcMin(sd),trainType:tt["odpt:trainType"],dest:dst,origin:orig,targetTrack:hasSt(dst,"NishiMagome")?2:1});
+            }
+          });
+        }
+      }
+
+      const procStTT=async(res,mode)=>{
+        if(!res||!res.ok)return;
+        try{
+          const arr=await res.json();if(!Array.isArray(arr))return;
+          arr.forEach(stObj=>{
+            const calId=stObj["odpt:calendar"]||"",dirStr=stObj["odpt:railDirection"]||"";
+            if(!calId.includes(cal))return;
+            const list=Array.isArray(stObj["odpt:stationTimetableObject"])?stObj["odpt:stationTimetableObject"]:[];
+            list.forEach(o=>{
+              const dep=o["odpt:departureTime"],num=o["odpt:trainNumber"]||"";
+              if(!dep||!num)return;
+              const cn=coreNum(num),op=opCode(num);
+              if(mode==="senga"&&dirStr.includes("Southbound")&&o["odpt:isOrigin"]){
+                const k=cn+"_"+dep;
+                if(!sengaMap.has(k)){
+                  const dst=o["odpt:destinationStation"];
+                  sengaMap.set(k,{num,depTime:dep,depMin:toSvcMin(dep),trainType:o["odpt:trainType"],dest:dst,origin:[SENGA_ID],targetTrack:hasSt(dst,"NishiMagome")?2:1});
+                }
+              }else if(mode==="nishi"&&dirStr.includes("Northbound")){
+                addDepOp(nishiDepByOp,op,num,dep);
+                const dm=toSvcMin(dep);
+                if(!ttByNum.has(num))ttByNum.set(num,{num,origin:[NISHI_ID],na:null,nm:null,nd:dep,ndm:dm,od:null,odm:null});
+                else if(!ttByNum.get(num).nd){ttByNum.get(num).nd=dep;ttByNum.get(num).ndm=dm}
+                if(cn&&!ttByCore.has(cn))ttByCore.set(cn,[{num,origin:[NISHI_ID],na:null,nm:null,nd:dep,ndm:dm,od:null,odm:null}]);
+              }else if(mode==="oshi"&&dirStr.includes("Southbound")){
+                addDepOp(oshiDepByOp,op,num,dep);
+                const dm=toSvcMin(dep);
+                if(!ttByNum.has(num))ttByNum.set(num,{num,origin:null,na:null,nm:null,nd:null,ndm:null,od:dep,odm:dm});
+                else if(!ttByNum.get(num).od){ttByNum.get(num).od=dep;ttByNum.get(num).odm=dm}
+                if(cn&&!ttByCore.has(cn))ttByCore.set(cn,[{num,origin:null,na:null,nm:null,nd:null,ndm:null,od:dep,odm:dm}]);
+              }
+            });
+          });
+        }catch(e){}
+      };
+
+      await Promise.all([procStTT(rS,"senga"),procStTT(rN,"nishi"),procStTT(rO,"oshi")]);
+
       nishiByOp.forEach(l=>l.sort((a,b)=>a.min-b.min));
+      nishiDepByOp.forEach(l=>l.sort((a,b)=>a.min-b.min));
+      oshiDepByOp.forEach(l=>l.sort((a,b)=>a.min-b.min));
+      sengaOrigins=Array.from(sengaMap.values()).sort((a,b)=>a.depMin-b.depMin);
       ttReady=true;return true;
-    }catch(e){return false}
+    }catch(e){
+      sengaOrigins=Array.from(sengaMap.values()).sort((a,b)=>a.depMin-b.depMin);
+      ttReady=true;return true;
+    }
+  }
+
+  function findTT(num){
+    if(!num)return null;
+    if(ttByNum.has(num))return ttByNum.get(num);
+    const list=ttByCore.get(coreNum(num));
+    return(list&&list.length)?list[0]:null;
   }
 
   function nextNishi(t){
     if(!ttReady)return{text:"...",train:null,none:true};
-    const num=t["odpt:trainNumber"]||"",nowM=nowSvcMin(),cur=ttByNum.get(num);
-    if(cur&&cur.na&&cur.nm>=nowM-45)return{text:cur.na,train:num,none:false};
+    const num=t["odpt:trainNumber"]||"",nowM=nowSvcMin(),cur=findTT(num);
+    if(cur&&cur.na&&cur.nm>=nowM-45)return{text:cur.na,train:cur.num||num,none:false};
     const op=opCode(num);
     if(op&&nishiByOp.has(op)){const hit=nishiByOp.get(op).find(x=>x.min>=nowM-3);if(hit)return{text:hit.time,train:hit.num,none:false}}
     return{text:"-",train:null,none:true};
   }
 
+  function stDeparture(t,which,dir){
+    if(!ttReady)return null;
+    const num=t["odpt:trainNumber"]||"",nowM=nowSvcMin();
+    const cur=ttByNum.get(num);
+    if(which==="nishi"&&cur&&cur.nd)return{time:cur.nd,train:num};
+    if(which==="oshi"&&cur&&cur.od)return{time:cur.od,train:num};
+
+    const coreList=ttByCore.get(coreNum(num));
+    if(coreList){
+      const match=coreList.find(x=>which==="nishi"?x.nd:x.od);
+      if(match)return{time:which==="nishi"?match.nd:match.od,train:match.num};
+    }
+
+    const op=opCode(num),map=which==="nishi"?nishiDepByOp:oshiDepByOp;
+    if(op&&map.has(op)){
+      const list=map.get(op);
+      const isDepartingDir=(which==="nishi"&&dir==="north")||(which==="oshi"&&dir==="south");
+      const future=list.find(x=>x.min>=nowM-5&&x.min<=nowM+50);
+      if(future)return{time:future.time,train:future.num};
+      if(isDepartingDir){
+        const delayed=[...list].reverse().find(x=>x.min>=nowM-25&&x.min<nowM-5);
+        if(delayed)return{time:delayed.time,train:delayed.num};
+      }
+    }
+    return null;
+  }
+
   function originOf(t){
     if(t["odpt:originStation"]&&t["odpt:originStation"].length)return t["odpt:originStation"];
     if(t["odpt:startingStation"]&&t["odpt:startingStation"].length)return t["odpt:startingStation"];
-    const c=ttByNum.get(t["odpt:trainNumber"]||"");return c?c.origin:null;
+    const c=findTT(t["odpt:trainNumber"]||"");return c?c.origin:null;
   }
 
-  // 泉岳寺の番線判定: 南行(西馬込行き=2番線, 京急方面行き=1番線) / 北行(西馬込始発=3番線, 京急線内始発=4番線)
   function sengaTrack(t,dir){
-    if(dir==="south")return hasNishi(t["odpt:destinationStation"])?2:1;
-    return hasNishi(originOf(t))?3:4;
+    if(dir==="south")return hasSt(t["odpt:destinationStation"],"NishiMagome")?2:1;
+    return hasSt(originOf(t),"NishiMagome")?3:4;
   }
 
   function dirOf(t){
@@ -309,39 +492,202 @@ body.is-3col .app-footer p{margin:0!important;overflow:hidden;text-overflow:elli
     return(fi!==undefined&&ti!==undefined)?(ti>fi?"north":"south"):"north";
   }
 
+  function updateSidings(currTrains){
+    const now=Date.now();
+    sidings.sengakuji=sidings.sengakuji.filter(s=>now-s.enteredAt<3600000);
+    sidings.asakusabashi=sidings.asakusabashi.filter(s=>now-s.enteredAt<3600000);
+
+    const currCores=new Set(),southCores=new Set(),southOps=new Set();
+    currTrains.forEach(t=>{
+      const num=t["odpt:trainNumber"]||"";
+      if(num)currCores.add(coreNum(num));
+      if(dirOf(t)==="south"&&num){
+        southCores.add(coreNum(num));
+        const op=opCode(num);if(op)southOps.add(op);
+      }
+    });
+
+    sidings.sengakuji=sidings.sengakuji.filter(s=>{
+      const exp=minusOneCore(s.origNum),op=opCode(s.origNum);
+      if(exp&&southCores.has(exp))return false;
+      if(op&&southOps.has(op))return false;
+      return true;
+    });
+    sidings.asakusabashi=sidings.asakusabashi.filter(s=>{
+      const exp=minusOneCore(s.origNum),op=opCode(s.origNum);
+      if(exp&&southCores.has(exp))return false;
+      if(op&&southOps.has(op))return false;
+      return true;
+    });
+
+    if(hasPrevSnap){
+      prevTrainMap.forEach((prev,cNum)=>{
+        if(currCores.has(cNum))return;
+        const exp=minusOneCore(prev.num),op=opCode(prev.num);
+        if((exp&&southCores.has(exp))||(op&&southOps.has(op)))return;
+
+        const dst=prev.train["odpt:destinationStation"];
+        const fromId=prev.train["odpt:fromStation"],toId=prev.train["odpt:toStation"];
+        const nearSenga=fromId===SENGA_ID||toId===SENGA_ID||fromId===P+"Mita";
+        const nearAsakusa=fromId===ASAKUSABASHI_ID||toId===ASAKUSABASHI_ID||fromId===P+"HigashiNihombashi";
+
+        if(hasSt(dst,"Sengakuji")&&nearSenga){
+          if(!sidings.sengakuji.some(x=>coreNum(x.origNum)===cNum)){
+            sidings.sengakuji.push({id:"s_"+now+"_"+cNum,origNum:prev.num,expNum:exp||"---",train:prev.train,enteredAt:now});
+          }
+        }else if(hasSt(dst,"Asakusabashi")&&nearAsakusa){
+          if(!sidings.asakusabashi.some(x=>coreNum(x.origNum)===cNum)){
+            sidings.asakusabashi.push({id:"a_"+now+"_"+cNum,origNum:prev.num,expNum:exp||"---",train:prev.train,enteredAt:now});
+          }
+        }
+      });
+    }
+
+    prevTrainMap.clear();
+    currTrains.forEach(t=>{const num=t["odpt:trainNumber"]||"";if(num)prevTrainMap.set(coreNum(num),{num,train:t})});
+    hasPrevSnap=true;
+    saveSidings();
+  }
+
+  function activeSengaPreTrains(currTrains){
+    if(!ttReady||!sengaOrigins.length)return[];
+    const nowM=nowSvcMin();
+    const activeNums=new Set(),activeSengaOps=new Set();
+    currTrains.forEach(t=>{
+      const num=t["odpt:trainNumber"]||"";
+      if(num)activeNums.add(coreNum(num));
+      if(dirOf(t)==="south"&&(t["odpt:fromStation"]===SENGA_ID||t["odpt:fromStation"]===P+"Takanawadai"||t["odpt:fromStation"]===P+"NishiMagome")){
+        const op=opCode(num);if(op)activeSengaOps.add(op);
+      }
+    });
+    return sengaOrigins.filter(x=>{
+      if(nowM<x.depMin-5||nowM>x.depMin+1)return false;
+      if(activeNums.has(coreNum(x.num)))return false;
+      const op=opCode(x.num);if(op&&activeSengaOps.has(op))return false;
+      return true;
+    });
+  }
+
   function applyLay(){
     const u=manLay!==null?manLay:(window.innerWidth>=740);
-    document.body.classList.toggle("is-3col",u);layBtn.textContent=u?"1列表示":"3列表示";
+    document.body.classList.toggle("is-3col",u);layBtn.textContent=u?"1列":"3列";
   }
   layBtn.addEventListener("click",()=>{manLay=!document.body.classList.contains("is-3col");applyLay()});
   window.addEventListener("resize",()=>{if(manLay===null)applyLay()});
 
-  function badge(t,dir,run,trk){
-    const tp=trType(t["odpt:trainType"]),dst=fmtDest(t["odpt:destinationStation"]),num=t["odpt:trainNumber"]||"---",dm=dlyMin(t["odpt:delay"]),toei=isToei(t),ni=nextNishi(t);
+  function badge(t,dir,run,trk,stId){
+    const tp=trType(t["odpt:trainType"]),dst=fmtDest(t["odpt:destinationStation"]),num=t["odpt:trainNumber"]||"---",dm=dlyMin(t["odpt:delay"]),toei=isToei(t);
+    let etaHtml="";
+    if(!run&&stId===NISHI_ID){
+      const dep=stDeparture(t,"nishi",dir);
+      if(dep)etaHtml=`<span class="dep-eta">西${esc(dep.time)}発</span>`;
+    }else if(!run&&stId===OSHI_ID){
+      const ni=nextNishi(t),dep=stDeparture(t,"oshi",dir);
+      etaHtml=`<span class="eta-group">${dep?`<span class="dep-eta">押${esc(dep.time)}発</span>`:""}<span class="nishi-eta${ni.none?" none":""}">西 ${esc(ni.text)}</span></span>`;
+    }else{
+      const ni=nextNishi(t);
+      etaHtml=`<span class="nishi-eta${ni.none?" none":""}">西 ${esc(ni.text)}</span>`;
+    }
     const b=document.createElement("button");b.type="button";
     b.className=`train-badge ${run?"is-running":"is-stopped"} ${toei?"is-toei":"is-other"}`;
     b.innerHTML=`<div class="badge-row-top"><span class="train-type-chip ${esc(tp.c)}">${esc(tp.l)}</span><span class="train-num-badge">${esc(num)}</span></div>`+
-      `<div class="badge-row-mid"><span class="dest-wrap"><span class="dir-arrow ${dir}">${dir==="north"?"↓":"↑"}</span><span class="dest-name">${esc(dst)}行</span></span><span class="nishi-eta${ni.none?" none":""}">西 ${esc(ni.text)}</span></div>`+
+      `<div class="badge-row-mid"><span class="dest-wrap"><span class="dir-arrow ${dir}">${dir==="north"?"↓":"↑"}</span><span class="dest-name">${esc(dst)}行</span></span>${etaHtml}</div>`+
       `<div class="badge-row-bottom"><div class="status-chips"><span class="state-label ${run?"running":""}">${run?"走行中":"停車中"}</span>${trk?`<span class="track-num-chip">${trk}番線</span>`:""}${toei?'<span class="toei-owner-chip">都営車</span>':""}</div>${dm>0?`<span class="delay-tag">+${dm}分</span>`:""}</div>`;
-    b.addEventListener("click",()=>openMod(t,dir,run,trk));
+    b.addEventListener("click",()=>openMod(t,dir,run,trk,null,null,stId));
     return b;
   }
 
-  function addSlots(el,items,dir,bays,guide){
+  function sidingBadge(s,stName,stKey,preMatch,waitingForTrack2){
+    const t=s.train,toei=isToei(t),tp=preMatch?trType(preMatch.trainType):trType(t["odpt:trainType"]);
+    const numDisp=preMatch?preMatch.num:s.origNum;
+    const dstHtml=preMatch?`<span class="dest-name">${esc(fmtDest(preMatch.dest))}行</span>`:`<span class="dest-name">折返待(${esc(s.expNum)})</span>`;
+    const etaHtml=preMatch?`<span class="dep-eta">始${esc(preMatch.depTime)}発</span>`:"";
+    const stateLabel=waitingForTrack2?"引き上げ線（2番線待）":"引き上げ線";
+    const b=document.createElement("button");b.type="button";
+    b.className=`train-badge is-siding ${toei?"is-toei":"is-other"}`;
+    b.innerHTML=`<div class="badge-row-top"><span class="train-type-chip ${esc(tp.c)}">${preMatch?esc(tp.l):"引上"}</span><span class="train-num-badge">${esc(numDisp)}</span></div>`+
+      `<div class="badge-row-mid"><span class="dest-wrap"><span class="dir-arrow south">${preMatch?"↑":"⇄"}</span>${dstHtml}</span>${etaHtml}</div>`+
+      `<div class="badge-row-bottom"><div class="status-chips"><span class="state-label siding">${stateLabel}</span>${toei?'<span class="toei-owner-chip">都営車</span>':""}</div></div>`;
+    b.addEventListener("click",()=>openMod(preMatch?{"odpt:trainType":preMatch.trainType,"odpt:destinationStation":preMatch.dest,"odpt:trainNumber":preMatch.num,"odpt:originStation":preMatch.origin,"odpt:fromStation":SENGA_ID}:t,"south",false,null,{stName,stKey,siding:s},preMatch||null,SENGA_ID));
+    return b;
+  }
+
+  function preBadge(p,inSiding){
+    const tp=trType(p.trainType),dst=fmtDest(p.dest),toei=isToei({"odpt:trainNumber":p.num});
+    const b=document.createElement("button");b.type="button";
+    b.className=`train-badge ${inSiding?"is-siding":"is-pre"} ${toei?"is-toei":"is-other"}`;
+    const stateCls=inSiding?"siding":"pre";
+    const stateTxt=inSiding?"引き上げ線（2番線待）":"始発予定";
+    const trkChip=inSiding?"":`<span class="track-num-chip">${p.targetTrack}番線</span>`;
+    b.innerHTML=`<div class="badge-row-top"><span class="train-type-chip ${esc(tp.c)}">${esc(tp.l)}</span><span class="train-num-badge">${esc(p.num)}</span></div>`+
+      `<div class="badge-row-mid"><span class="dest-wrap"><span class="dir-arrow south">↑</span><span class="dest-name">${esc(dst)}行</span></span><span class="dep-eta">始${esc(p.depTime)}発</span></div>`+
+      `<div class="badge-row-bottom"><div class="status-chips"><span class="state-label ${stateCls}">${stateTxt}</span>${trkChip}${toei?'<span class="toei-owner-chip">都営車</span>':""}</div></div>`;
+    b.addEventListener("click",()=>openMod({"odpt:trainType":p.trainType,"odpt:destinationStation":p.dest,"odpt:trainNumber":p.num,"odpt:originStation":p.origin,"odpt:fromStation":SENGA_ID},"south",false,inSiding?null:p.targetTrack,null,p,SENGA_ID));
+    return b;
+  }
+
+  function addSlots(el,items,dir,bays,guide,stId){
     const g=document.createElement("div");g.className="bay-guide";g.textContent=guide;el.appendChild(g);
-    items.forEach(x=>el.appendChild(badge(x.t,dir,false,null)));
+    items.forEach(x=>el.appendChild(badge(x.t,dir,false,null,stId)));
     for(let i=items.length;i<2;i++){const d=document.createElement("div");d.className="empty-bay-slot";d.textContent=`${bays[i]}（空き）`;el.appendChild(d)}
   }
 
-  function addSengaSlots(el,items,dir,guide){
+  function addSengaSouth(el,items,preList,guide){
     const g=document.createElement("div");g.className="bay-guide";g.textContent=guide;el.appendChild(g);
-    const tA=dir==="south"?1:3,tB=dir==="south"?2:4;
-    const listA=[],listB=[];
-    items.forEach(x=>{if(sengaTrack(x.t,dir)===tA)listA.push(x);else listB.push(x)});
-    if(listA.length)listA.forEach(x=>el.appendChild(badge(x.t,dir,false,tA)));
-    else{const d=document.createElement("div");d.className="empty-bay-slot";d.textContent=`${tA}番線（空き）`;el.appendChild(d)}
-    if(listB.length)listB.forEach(x=>el.appendChild(badge(x.t,dir,false,tB)));
-    else{const d=document.createElement("div");d.className="empty-bay-slot";d.textContent=`${tB}番線（空き）`;el.appendChild(d)}
+    const l1=[],l2=[];
+    items.forEach(x=>{if(sengaTrack(x.t,"south")===1)l1.push(x);else l2.push(x)});
+
+    const pre1=preList.filter(p=>p.targetTrack===1);
+    const pre2=preList.filter(p=>p.targetTrack===2);
+    const track2Busy=l2.length>0;
+
+    if(l1.length)l1.forEach(x=>el.appendChild(badge(x.t,"south",false,1,SENGA_ID)));
+    else if(pre1.length)pre1.forEach(p=>el.appendChild(preBadge(p,false)));
+    else{const d=document.createElement("div");d.className="empty-bay-slot";d.textContent="1番線（空き）";el.appendChild(d)}
+
+    const usedPre2=new Set(),sidingNodes=[];
+    sidings.sengakuji.forEach(s=>{
+      const sOp=opCode(s.origNum),sExp=minusOneCore(s.origNum);
+      const matchPre=pre2.find(p=>(sExp&&coreNum(p.num)===sExp)||(sOp&&opCode(p.num)===sOp));
+      if(matchPre){
+        usedPre2.add(matchPre);
+        if(track2Busy)sidingNodes.push(sidingBadge(s,"泉岳寺","sengakuji",matchPre,true));
+      }else{
+        sidingNodes.push(sidingBadge(s,"泉岳寺","sengakuji",null,false));
+      }
+    });
+
+    const remainPre2=pre2.filter(p=>!usedPre2.has(p));
+
+    if(track2Busy){
+      l2.forEach(x=>el.appendChild(badge(x.t,"south",false,2,SENGA_ID)));
+      remainPre2.forEach(p=>sidingNodes.push(preBadge(p,true)));
+    }else if(pre2.length){
+      pre2.forEach(p=>el.appendChild(preBadge(p,false)));
+    }else{
+      const d=document.createElement("div");d.className="empty-bay-slot";d.textContent="2番線（空き）";el.appendChild(d);
+    }
+
+    if(sidingNodes.length)sidingNodes.forEach(n=>el.appendChild(n));
+    else{const d=document.createElement("div");d.className="empty-bay-slot siding";d.textContent="引き上げ線（空き）";el.appendChild(d)}
+  }
+
+  function addSengaNorth(el,items,guide){
+    const g=document.createElement("div");g.className="bay-guide";g.textContent=guide;el.appendChild(g);
+    const l3=[],l4=[];
+    items.forEach(x=>{if(sengaTrack(x.t,"north")===3)l3.push(x);else l4.push(x)});
+    if(l3.length)l3.forEach(x=>el.appendChild(badge(x.t,"north",false,3,SENGA_ID)));
+    else{const d=document.createElement("div");d.className="empty-bay-slot";d.textContent="3番線（空き）";el.appendChild(d)}
+    if(l4.length)l4.forEach(x=>el.appendChild(badge(x.t,"north",false,4,SENGA_ID)));
+    else{const d=document.createElement("div");d.className="empty-bay-slot";d.textContent="4番線（空き）";el.appendChild(d)}
+  }
+
+  function addAsakusaSouth(el,items,guide){
+    const g=document.createElement("div");g.className="bay-guide";g.textContent=guide;el.appendChild(g);
+    if(items.length)items.forEach(x=>el.appendChild(badge(x.t,"south",false,1,ASAKUSABASHI_ID)));
+    else{const d=document.createElement("div");d.className="empty-bay-slot";d.textContent="1番線（空き）";el.appendChild(d)}
+    if(sidings.asakusabashi.length)sidings.asakusabashi.forEach(s=>el.appendChild(sidingBadge(s,"浅草橋","asakusabashi",null,false)));
+    else{const d=document.createElement("div");d.className="empty-bay-slot siding";d.textContent="引き上げ線（空き）";el.appendChild(d)}
   }
 
   function render(trains){
@@ -354,8 +700,10 @@ body.is-3col .app-footer p{margin:0!important;overflow:hidden;text-overflow:elli
       else if(fi!==undefined){sgSl[dir==="north"?Math.min(fi,sgSl.length-1):Math.max(0,fi-1)][dir].push({t});cnt++}
       else if(ti!==undefined){sgSl[dir==="south"?Math.min(ti,sgSl.length-1):Math.max(0,ti-1)][dir].push({t});cnt++}
     });
-    cntEl.textContent=`${cnt} 列車`;
+    cntEl.textContent=`${cnt}本`;
     empEl.innerHTML=trains.length===0?'<div class="empty-state-card"><div class="empty-state-title">現在運行中の列車はありません</div><p class="empty-state-desc">深夜帯・営業時間外、または現在都営浅草線内の在線データがありません。</p></div>':"";
+    const sengaPre=activeSengaPreTrains(trains);
+
     const frag=document.createDocumentFragment();
     COLS.forEach(c=>{
       const col=document.createElement("div");col.className="route-column";
@@ -364,24 +712,28 @@ body.is-3col .app-footer p{margin:0!important;overflow:hidden;text-overflow:elli
       col.appendChild(ch);
       for(let i=c.start;i<=c.end;i++){
         const s=ST[i],sr=document.createElement("div");
-        sr.className=`station-row${i===0?" first-station":""}${i===ST.length-1?" last-station":""}${s.isDouble?" is-double-track":""}`;
+        sr.className=`station-row${i===0?" first-station":""}${i===ST.length-1?" last-station":""}${s.isDouble||s.id===ASAKUSABASHI_ID?" is-double-track":""}`;
         const lc=document.createElement("div");lc.className="track-col left";
-        if(s.id===SENGA_ID)addSengaSlots(lc,stSl[i].south,"south",s.lg);
-        else if(s.isDouble)addSlots(lc,stSl[i].south,"south",s.lb,s.lg);
-        else stSl[i].south.forEach(x=>lc.appendChild(badge(x.t,"south",false,null)));
+        if(s.id===SENGA_ID)addSengaSouth(lc,stSl[i].south,sengaPre,s.lg);
+        else if(s.id===ASAKUSABASHI_ID)addAsakusaSouth(lc,stSl[i].south,s.lg);
+        else if(s.isDouble)addSlots(lc,stSl[i].south,"south",s.lb,s.lg,s.id);
+        else stSl[i].south.forEach(x=>lc.appendChild(badge(x.t,"south",false,null,s.id)));
+
         const cc=document.createElement("div");cc.className="center-col";
         cc.innerHTML=`<div class="station-node"><span class="st-name${s.name.length>=5?" is-long":""}">${esc(s.name)}</span>${s.note?`<div class="st-note">${esc(s.note)}</div>`:""}</div>`;
+
         const rc=document.createElement("div");rc.className="track-col right";
-        if(s.id===SENGA_ID)addSengaSlots(rc,stSl[i].north,"north",s.rg);
-        else if(s.isDouble)addSlots(rc,stSl[i].north,"north",s.rb,s.rg);
-        else stSl[i].north.forEach(x=>rc.appendChild(badge(x.t,"north",false,null)));
+        if(s.id===SENGA_ID)addSengaNorth(rc,stSl[i].north,s.rg);
+        else if(s.isDouble)addSlots(rc,stSl[i].north,"north",s.rb,s.rg,s.id);
+        else stSl[i].north.forEach(x=>rc.appendChild(badge(x.t,"north",false,null,s.id)));
+
         sr.append(lc,cc,rc);col.appendChild(sr);
         if(i<ST.length-1){
           const sg=sgSl[i],has=sg.south.length>0||sg.north.length>0;
           const sgr=document.createElement("div");sgr.className=`segment-row${has?" has-trains":""}${i===c.end&&c.tail?" col-tail-segment":""}`;
-          const sl=document.createElement("div");sl.className="track-col left";sg.south.forEach(x=>sl.appendChild(badge(x.t,"south",true,null)));
+          const sl=document.createElement("div");sl.className="track-col left";sg.south.forEach(x=>sl.appendChild(badge(x.t,"south",true,null,null)));
           const sc=document.createElement("div");sc.className="center-col";sc.innerHTML='<span class="segment-dot"></span>';
-          const sr2=document.createElement("div");sr2.className="track-col right";sg.north.forEach(x=>sr2.appendChild(badge(x.t,"north",true,null)));
+          const sr2=document.createElement("div");sr2.className="track-col right";sg.north.forEach(x=>sr2.appendChild(badge(x.t,"north",true,null,null)));
           sgr.append(sl,sc,sr2);col.appendChild(sgr);
         }
       }
@@ -391,25 +743,54 @@ body.is-3col .app-footer p{margin:0!important;overflow:hidden;text-overflow:elli
     mapEl.innerHTML="";mapEl.appendChild(frag);
   }
 
-  function openMod(t,dir,run,trk){
+  function openMod(t,dir,run,trk,sidingInfo,preInfo,stId){
     const tp=trType(t["odpt:trainType"]),dst=fmtDest(t["odpt:destinationStation"]),num=t["odpt:trainNumber"]||"不明",own=ownerLbl(t),toei=isToei(t),
           ds=typeof t["odpt:delay"]==="number"?t["odpt:delay"]:0,dm=dlyMin(ds),
           fn=OBJ.get(t["odpt:fromStation"])?.name||trSt(t["odpt:fromStation"]),
-          tn=t["odpt:toStation"]?(OBJ.get(t["odpt:toStation"])?.name||trSt(t["odpt:toStation"])):null,
-          loc=run&&tn?`${fn} → ${tn} 走行中`:`${fn}駅 停車中${trk?`（${trk}番線）`:""}`,
-          dtxt=dir==="north"?"押上方面（北行 ↓）":"西馬込・泉岳寺方面（南行 ↑）",
+          tn=t["odpt:toStation"]?(OBJ.get(t["odpt:toStation"])?.name||trSt(t["odpt:toStation"])):null;
+    let loc=run&&tn?`${fn} → ${tn} 走行中`:`${fn}駅 停車中${trk?`（${trk}番線）`:""}`;
+    if(sidingInfo)loc=`${sidingInfo.stName}駅 引き上げ線（${preInfo?`2番線空次第入線 ${preInfo.depTime}発`:"折返待"}）`;
+    else if(preInfo)loc=`泉岳寺駅 ${trk?trk+"番線":"引き上げ線（2番線待）"}（始発予定 ${preInfo.depTime}発）`;
+
+    const dtxt=dir==="north"?"押上方面（北行 ↓）":"西馬込・泉岳寺方面（南行 ↑）",
           dltxt=dm>0?`+${dm}分（約${ds}秒遅れ）`:"定時（遅れなし）",
           orig=originOf(t),origTxt=orig?fmtDest(orig):"不明",ni=nextNishi(t),
-          niTxt=ni.none?"本日の直近到着なし（-）":(ni.train===num?`${ni.text}（この列車）`:`${ni.text}（${ni.train}として）`);
+          niTxt=ni.none?"本日の直近到着なし（-）":(coreNum(ni.train)===coreNum(num)?`${ni.text}（この列車）`:`${ni.text}（${ni.train}として）`);
     let dt="---";if(t["dc:date"]){const d=new Date(t["dc:date"]);if(!isNaN(d.getTime()))dt=fmtTime(d)}
+
     modTit.innerHTML=`<span class="train-type-chip ${esc(tp.c)}" style="font-size:12px;padding:2px 8px">${esc(tp.l)}</span><span>${esc(dst)}行</span>`;
     const rows=[
       ["列車番号",`<span class="train-num-badge" style="font-size:12px">${esc(num)}</span>`,""],
-      ["始発駅",esc(origTxt),""],["直近 西馬込着",esc(niTxt),""],
-      ["車両所属",`<span class="owner-pill${toei?" toei":""}">${esc(own)}</span>`,""],
-      ["現在位置",esc(loc),""],["進行方向",esc(dtxt),""],["遅延状況",esc(dltxt),dm>0?"delay-highlight":""],["データ時刻",esc(dt),""]
+      ["始発駅",esc(origTxt),""],["直近 西馬込着",esc(niTxt),""]
     ];
+    if(!run&&stId===NISHI_ID){
+      const dep=stDeparture(t,"nishi",dir);
+      if(dep)rows.push(["西馬込 発車予定",esc(`${dep.time}（${dep.train}）`),""]);
+    }else if(!run&&stId===OSHI_ID){
+      const dep=stDeparture(t,"oshi",dir);
+      if(dep)rows.push(["押上 発車予定",esc(`${dep.time}（${dep.train}）`),""]);
+    }
+    rows.push(["車両所属",`<span class="owner-pill${toei?" toei":""}">${esc(own)}</span>`,""]);
+    rows.push(["現在位置",esc(loc),""],["進行方向",esc(dtxt),""]);
+    if(sidingInfo){
+      rows.push(["入線時刻",esc(fmtTime(new Date(sidingInfo.siding.enteredAt))),""]);
+      rows.push(["予定折返番号",esc(sidingInfo.siding.expNum),""]);
+    }else if(!preInfo){
+      rows.push(["遅延状況",esc(dltxt),dm>0?"delay-highlight":""]);
+      rows.push(["データ時刻",esc(dt),""]);
+    }
     modList.innerHTML=rows.map(([k,v,c])=>`<li class="detail-item"><span class="detail-label">${esc(k)}</span><span class="detail-value ${c}">${v}</span></li>`).join("");
+
+    modAct.innerHTML="";
+    if(sidingInfo){
+      const cb=document.createElement("button");cb.type="button";cb.className="siding-clear-btn";
+      cb.textContent="この列車を引き上げ線表示から削除";
+      cb.addEventListener("click",()=>{
+        sidings[sidingInfo.stKey]=sidings[sidingInfo.stKey].filter(x=>x.id!==sidingInfo.siding.id);
+        saveSidings();modEl.classList.remove("open");render(lastTrains);
+      });
+      modAct.appendChild(cb);
+    }
     modEl.classList.add("open");
   }
 
@@ -420,6 +801,7 @@ body.is-3col .app-footer p{margin:0!important;overflow:hidden;text-overflow:elli
       if(!r.ok)throw new Error("HTTP "+r.status);
       const d=await r.json();if(!Array.isArray(d))throw new Error("Bad JSON");
       banEl.className="status-banner";banMsg.textContent="";
+      updateSidings(d);
       lastTrains=d;render(d);lastOk=new Date();updEl.textContent=`最終更新 ${fmtTime(lastOk)}`;
     }catch(e){
       banEl.className="status-banner error";banMsg.textContent="運行データの取得に失敗しました。";retBtn.style.display="inline-block";
