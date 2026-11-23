@@ -306,11 +306,38 @@ body.is-3col .app-footer p{margin:0!important;overflow:hidden;text-overflow:elli
   const fmtTime=d=>[d.getHours(),d.getMinutes(),d.getSeconds()].map(v=>String(v).padStart(2,"0")).join(":");
   const opCode=num=>{const m=String(num||"").match(/(\d{2})(SH|[THKNAC])[a-z]?$/i);return m?(m[1]+m[2].toUpperCase()):""};
   const coreNum=num=>{const m=String(num||"").match(/^(\d+)(SH|[THKNAC])/i);return m?(m[1]+m[2].toUpperCase()):String(num||"").toUpperCase()};
-  const minusOneCore=num=>{const m=String(num||"").match(/^(\d+)(SH|[THKNAC])/i);if(!m)return"";const n=parseInt(m[1],10);if(isNaN(n)||n<=1)return"";return String(n-1).padStart(m[1].length,"0")+m[2].toUpperCase()};
   const toSvcMin=hm=>{if(!hm)return null;const[h,m]=hm.split(":").map(Number);return isNaN(h)||isNaN(m)?null:(h<4?h+24:h)*60+m};
   const nowSvcMin=()=>{const h=new Date().getHours();return(h<4?h+24:h)*60+new Date().getMinutes()};
   const hasSt=(f,slug)=>Array.isArray(f)?f.some(x=>tail(x)===slug):tail(f)===slug;
   const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+  // 時(1-2桁)+運用(2桁)+社局 に分解し、同時間帯-1 / +1時間-1(0時跨ぎ含む)の候補を生成
+  function parseTrainParts(num){
+    const m=coreNum(num).match(/^(\d{1,2})(\d{2})(SH|[THKNAC])$/i);
+    if(!m)return null;
+    return{h:parseInt(m[1],10),op:parseInt(m[2],10),sfx:m[3].toUpperCase()};
+  }
+  function returnCands(origNum){
+    const pt=parseTrainParts(origNum);
+    if(!pt||pt.op<=0)return[];
+    const op2=String(pt.op-1).padStart(2,"0"),cands=[`${pt.h}${op2}${pt.sfx}`];
+    if(pt.h<10)cands.push(`0${pt.h}${op2}${pt.sfx}`);
+    const nh=pt.h+1;
+    cands.push(`${nh}${op2}${pt.sfx}`);
+    if(nh<10)cands.push(`0${nh}${op2}${pt.sfx}`);
+    if(nh===24)cands.push(`00${op2}${pt.sfx}`);
+    return Array.from(new Set(cands));
+  }
+  function pickExpectedNum(origNum){
+    const cands=returnCands(origNum);
+    if(!cands.length)return"---";
+    if(ttReady){const hit=cands.find(c=>ttByCore.has(c));if(hit)return hit}
+    return cands[0];
+  }
+  function sidingMatchesSouth(origNum,southCoreSet){
+    const cands=returnCands(origNum);
+    return cands.some(c=>southCoreSet.has(c));
+  }
 
   function svcDateObj(){const d=new Date();if(d.getHours()<4)d.setDate(d.getDate()-1);return d}
   function svcDateKey(cal){const d=svcDateObj();return`${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}_${cal}`}
@@ -434,7 +461,6 @@ body.is-3col .app-footer p{margin:0!important;overflow:hidden;text-overflow:elli
     buildManualSenga(cal,sengaMap);
     sengaOrigins=Array.from(sengaMap.values()).sort((a,b)=>a.depMin-b.depMin);
 
-    // 本日分のキャッシュがあれば即復元
     const cKey=svcDateKey(cal);
     try{
       const cached=JSON.parse(localStorage.getItem(TT_CACHE_KEY)||"null");
@@ -459,17 +485,12 @@ body.is-3col .app-footer p{margin:0!important;overflow:hidden;text-overflow:elli
     }catch(e){}
 
     try{
-      // 同時アクセス負荷を避けるため1本ずつ順番に取得
       const mainArr=await safeFetchJson(TT_BASE+cal);
-      if(!mainArr||mainArr.length===0){
-        ttLoading=false;
-        return false; // 失敗時はttReady=falseのままにし次回更新でリトライ
-      }
+      if(!mainArr||mainArr.length===0){ttLoading=false;return false}
 
       ttByNum.clear();ttByCore.clear();nishiByOp.clear();nishiDepByOp.clear();oshiDepByOp.clear();
       ingestTrainTimetableArray(mainArr,sengaMap);
 
-      // 1000件上限に達していた場合のみ方向別で補完
       if(mainArr.length>=999){
         await sleep(250);
         const sb=await safeFetchJson(TT_BASE+cal+"&odpt:railDirection=odpt.RailDirection:Southbound");
@@ -494,24 +515,18 @@ body.is-3col .app-footer p{margin:0!important;overflow:hidden;text-overflow:elli
       finalizeTT(sengaMap);
       ttReady=true;
 
-      // 50件以上取得できたら当日キャッシュへ保存
       try{
         const recs=Array.from(ttByNum.values());
         if(recs.length>50){
           localStorage.setItem(TT_CACHE_KEY,JSON.stringify({
-            key:cKey,
-            recs,
-            senga:Array.from(sengaMap.values()).filter(x=>!x.isManual)
+            key:cKey,recs,senga:Array.from(sengaMap.values()).filter(x=>!x.isManual)
           }));
         }
       }catch(e){}
 
       return true;
-    }catch(e){
-      return false;
-    }finally{
-      ttLoading=false;
-    }
+    }catch(e){return false}
+    finally{ttLoading=false}
   }
 
   function findTT(num){
@@ -590,24 +605,20 @@ body.is-3col .app-footer p{margin:0!important;overflow:hidden;text-overflow:elli
       }
     });
 
-    sidings.sengakuji=sidings.sengakuji.filter(s=>{
-      const exp=minusOneCore(s.origNum),op=opCode(s.origNum);
-      if(exp&&southCores.has(exp))return false;
-      if(op&&southOps.has(op))return false;
+    // 同時間帯-1（2114T）と+1時間繰り上がり-1（2214T等）の両方を消去対象にする
+    const shouldKeep=s=>{
+      if(sidingMatchesSouth(s.origNum,southCores))return false;
+      const op=opCode(s.origNum);if(op&&southOps.has(op))return false;
       return true;
-    });
-    sidings.asakusabashi=sidings.asakusabashi.filter(s=>{
-      const exp=minusOneCore(s.origNum),op=opCode(s.origNum);
-      if(exp&&southCores.has(exp))return false;
-      if(op&&southOps.has(op))return false;
-      return true;
-    });
+    };
+    sidings.sengakuji=sidings.sengakuji.filter(shouldKeep);
+    sidings.asakusabashi=sidings.asakusabashi.filter(shouldKeep);
 
     if(hasPrevSnap){
       prevTrainMap.forEach((prev,cNum)=>{
         if(currCores.has(cNum))return;
-        const exp=minusOneCore(prev.num),op=opCode(prev.num);
-        if((exp&&southCores.has(exp))||(op&&southOps.has(op)))return;
+        const op=opCode(prev.num);
+        if(sidingMatchesSouth(prev.num,southCores)||(op&&southOps.has(op)))return;
 
         const dst=prev.train["odpt:destinationStation"];
         const fromId=prev.train["odpt:fromStation"],toId=prev.train["odpt:toStation"];
@@ -616,11 +627,11 @@ body.is-3col .app-footer p{margin:0!important;overflow:hidden;text-overflow:elli
 
         if(hasSt(dst,"Sengakuji")&&nearSenga){
           if(!sidings.sengakuji.some(x=>coreNum(x.origNum)===cNum)){
-            sidings.sengakuji.push({id:"s_"+now+"_"+cNum,origNum:prev.num,expNum:exp||"---",train:prev.train,enteredAt:now});
+            sidings.sengakuji.push({id:"s_"+now+"_"+cNum,origNum:prev.num,expNum:pickExpectedNum(prev.num),train:prev.train,enteredAt:now});
           }
         }else if(hasSt(dst,"Asakusabashi")&&nearAsakusa){
           if(!sidings.asakusabashi.some(x=>coreNum(x.origNum)===cNum)){
-            sidings.asakusabashi.push({id:"a_"+now+"_"+cNum,origNum:prev.num,expNum:exp||"---",train:prev.train,enteredAt:now});
+            sidings.asakusabashi.push({id:"a_"+now+"_"+cNum,origNum:prev.num,expNum:pickExpectedNum(prev.num),train:prev.train,enteredAt:now});
           }
         }
       });
@@ -682,8 +693,9 @@ body.is-3col .app-footer p{margin:0!important;overflow:hidden;text-overflow:elli
 
   function sidingBadge(s,stName,stKey,preMatch,waitingForTrack2){
     const t=s.train,toei=isToei(t),tp=preMatch?trType(preMatch.trainType):trType(t["odpt:trainType"]);
+    const dispExp=pickExpectedNum(s.origNum);
     const numDisp=preMatch?preMatch.num:s.origNum;
-    const dstHtml=preMatch?`<span class="dest-name">${esc(fmtDest(preMatch.dest))}行</span>`:`<span class="dest-name">折返待(${esc(s.expNum)})</span>`;
+    const dstHtml=preMatch?`<span class="dest-name">${esc(fmtDest(preMatch.dest))}行</span>`:`<span class="dest-name">折返待(${esc(dispExp)})</span>`;
     const etaHtml=preMatch?`<span class="dep-eta">始${esc(preMatch.depTime)}発</span>`:"";
     const stateLabel=waitingForTrack2?"引き上げ線（2番線待）":"引き上げ線";
     const b=document.createElement("button");b.type="button";
@@ -730,8 +742,8 @@ body.is-3col .app-footer p{margin:0!important;overflow:hidden;text-overflow:elli
 
     const usedPre2=new Set(),sidingNodes=[];
     sidings.sengakuji.forEach(s=>{
-      const sOp=opCode(s.origNum),sExp=minusOneCore(s.origNum);
-      const matchPre=pre2.find(p=>(sExp&&coreNum(p.num)===sExp)||(sOp&&opCode(p.num)===sOp));
+      const sOp=opCode(s.origNum),cands=returnCands(s.origNum);
+      const matchPre=pre2.find(p=>cands.includes(coreNum(p.num))||(sOp&&opCode(p.num)===sOp));
       if(matchPre){
         usedPre2.add(matchPre);
         if(track2Busy)sidingNodes.push(sidingBadge(s,"泉岳寺","sengakuji",matchPre,true));
@@ -857,7 +869,7 @@ body.is-3col .app-footer p{margin:0!important;overflow:hidden;text-overflow:elli
     rows.push(["現在位置",esc(loc),""],["進行方向",esc(dtxt),""]);
     if(sidingInfo){
       rows.push(["入線時刻",esc(fmtTime(new Date(sidingInfo.siding.enteredAt))),""]);
-      rows.push(["予定折返番号",esc(sidingInfo.siding.expNum),""]);
+      rows.push(["予定折返番号",esc(returnCands(sidingInfo.siding.origNum).join(" / ")||sidingInfo.siding.expNum),""]);
     }else if(!preInfo){
       rows.push(["遅延状況",esc(dltxt),dm>0?"delay-highlight":""]);
       rows.push(["データ時刻",esc(dt),""]);
