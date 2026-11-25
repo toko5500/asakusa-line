@@ -5,8 +5,6 @@
   const ST_TT_BASE="https://api-public.odpt.org/api/v4/odpt:StationTimetable?odpt:operator=odpt.Operator:Toei&odpt:station=odpt.Station:Toei.Asakusa.";
   const SEC=45,P="odpt.Station:Toei.Asakusa.",NISHI_ID=P+"NishiMagome",SENGA_ID=P+"Sengakuji",ASAKUSABASHI_ID=P+"Asakusabashi",OSHI_ID=P+"Oshiage";
   const SIDING_KEY="asakusa_siding_v1",TT_CACHE_KEY="asakusa_tt_cache_v2",UNIT_KEY="asakusa_unit_map_v1";
-
-  // 異番号・異社局折り返しマッピング
   const SIDING_ALIAS={"1637N":["1686K","1786K"]};
 
   const SENGA_MANUAL={
@@ -77,6 +75,7 @@
   const nowSvcMin=()=>{const h=new Date().getHours();return(h<4?h+24:h)*60+new Date().getMinutes()};
   const hasSt=(f,slug)=>Array.isArray(f)?f.some(x=>tail(x)===slug):tail(f)===slug;
   const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  const fmtHmStr=hm=>{if(!/^\d{3,4}$/.test(hm))return"";const s=hm.padStart(4,"0");return s.slice(0,2)+":"+s.slice(2,4)};
 
   function normOpInput(raw){
     const s=String(raw||"").trim().toUpperCase().replace(/[Ａ-Ｚ０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0));
@@ -251,32 +250,66 @@
   function originOf(t){if(t["odpt:originStation"]&&t["odpt:originStation"].length)return t["odpt:originStation"];if(t["odpt:startingStation"]&&t["odpt:startingStation"].length)return t["odpt:startingStation"];const c=findTT(t["odpt:trainNumber"]||"");return c?c.origin:null}
   function sengaTrack(t,dir){if(dir==="south")return hasSt(t["odpt:destinationStation"],"NishiMagome")?2:1;return hasSt(originOf(t),"NishiMagome")?3:4}
 
-  // 西馬込発車番線判定（2番線リスト以外は1番線）
-  function nishiTrack(t,dir){
+  function matchNishiT2(targetNum,depTimeStr){
     const cal=guessCal(),t2List=(window.NISHI_T2&&window.NISHI_T2[cal])?window.NISHI_T2[cal]:[];
     if(!t2List.length)return null;
-    let targetNum="",dep=stDeparture(t,"nishi",dir);
-    if(dir==="north"){targetNum=t["odpt:trainNumber"]||""}
-    else{if(dep&&dep.train)targetNum=dep.train;else return null}
-    const up=targetNum.toUpperCase(),cn=coreNum(up);
-    if(t2List.some(x=>x.num===up))return 2;
-    const matches=t2List.filter(x=>x.core===cn);
+    const up=String(targetNum||"").toUpperCase(),cn=coreNum(up);
+    if(up&&t2List.some(x=>x.num===up))return 2;
+    const matches=cn?t2List.filter(x=>x.core===cn):[];
     if(matches.length){
-      const dMin=dep&&dep.time?toSvcMin(dep.time):null;
+      const dMin=depTimeStr?toSvcMin(depTimeStr):null;
       if(dMin===null&&matches.length===1)return 2;
       if(dMin!==null&&matches.some(x=>Math.abs(x.min-dMin)<=15))return 2;
     }
-    if(dep&&dep.time&&t2List.some(x=>x.time===dep.time))return 2;
+    if(depTimeStr&&t2List.some(x=>x.time===depTimeStr))return 2;
     return 1;
+  }
+
+  function nishiTrack(t,dir){
+    let targetNum="",dep=stDeparture(t,"nishi",dir);
+    if(dir==="north"){targetNum=t["odpt:trainNumber"]||""}
+    else{if(dep&&dep.train)targetNum=dep.train;else return null}
+    return matchNishiT2(targetNum,dep?dep.time:null);
+  }
+
+  // 南行・中延到着後（中延〜西馬込）の西馬込着予定・入庫予定判定
+  function nishiArrivalPlan(t){
+    const num=t["odpt:trainNumber"]||"",cn=coreNum(num),cal=guessCal(),toei=isToei(t);
+    if(toei&&window.UNYO_DATA&&window.UNYO_DATA[cal]){
+      const oddOp=oddOpKey(opCode(num)),legs=window.UNYO_DATA[cal][oddOp]||[];
+      if(legs.length){
+        const nowM=nowSvcMin();
+        let idx=legs.findIndex(x=>coreNum(x.num)===cn&&x.to==="西馬込");
+        if(idx<0)idx=legs.findIndex(x=>x.to==="西馬込"&&x.aMin!==null&&Math.abs(x.aMin-(nowM+6))<=35);
+        if(idx>=0){
+          const curLg=legs[idx],nextLg=legs[idx+1];
+          if(!nextLg||nextLg.isRep||nextLg.from!=="西馬込")return{isDepot:true,track:null,nextTrain:null,nextTime:null};
+          if(curLg.aMin!==null&&nextLg.dMin!==null&&(nextLg.dMin-curLg.aMin)>50)return{isDepot:true,track:null,nextTrain:null,nextTime:null};
+          const nTime=fmtHmStr(nextLg.dep),trk=matchNishiT2(nextLg.num,nTime)||1;
+          return{isDepot:false,track:trk,nextTrain:nextLg.num,nextTime:nTime};
+        }
+      }
+    }
+    const dep=stDeparture(t,"nishi","south");
+    if(dep&&dep.train){
+      const trk=matchNishiT2(dep.train,dep.time)||1;
+      return{isDepot:false,track:trk,nextTrain:dep.train,nextTime:dep.time};
+    }
+    if(toei&&ttReady)return{isDepot:true,track:null,nextTrain:null,nextTime:null};
+    return null;
+  }
+
+  function isAfterNakanobuSouth(t,dir){
+    if(dir!=="south")return false;
+    const fi=IDX.get(t["odpt:fromStation"]),ti=t["odpt:toStation"]?IDX.get(t["odpt:toStation"]):undefined;
+    return(fi!==undefined&&fi<=2)&&(ti===undefined||ti<=2);
   }
 
   function dirOf(t){const d=t["odpt:railDirection"]||"";if(d.includes("Northbound"))return"north";if(d.includes("Southbound"))return"south";const fi=IDX.get(t["odpt:fromStation"]),ti=IDX.get(t["odpt:toStation"]);return(fi!==undefined&&ti!==undefined)?(ti>fi?"north":"south"):"north"}
 
   function updateSidings(currTrains){
     const now=Date.now();sidings.sengakuji=sidings.sengakuji.filter(s=>now-s.enteredAt<3600000);sidings.asakusabashi=sidings.asakusabashi.filter(s=>now-s.enteredAt<3600000);
-    const currCores=new Set(),southCores=new Set(),southOps=new Set();
-    const newSengaOrigs=[],newAsakusaOrigs=[];
-
+    const currCores=new Set(),southCores=new Set(),southOps=new Set(),newSengaOrigs=[],newAsakusaOrigs=[];
     currTrains.forEach(t=>{
       const num=t["odpt:trainNumber"]||"",cn=num?coreNum(num):"";
       if(cn)currCores.add(cn);
@@ -284,28 +317,14 @@
         southCores.add(cn);const op=opCode(num);if(op)southOps.add(op);
         if(hasPrevSnap&&cn&&!prevTrainMap.has(cn)){
           const orig=originOf(t);
-          if(hasSt(orig,"Sengakuji"))newSengaOrigs.push(cn);
-          else if(hasSt(orig,"Asakusabashi"))newAsakusaOrigs.push(cn);
+          if(hasSt(orig,"Sengakuji"))newSengaOrigs.push(cn);else if(hasSt(orig,"Asakusabashi"))newAsakusaOrigs.push(cn);
         }
       }
     });
-
-    const keepCheck=(s,newOrigs)=>{
-      if(sidingMatchesSouth(s.origNum,southCores))return false;
-      const op=opCode(s.origNum);if(op&&southOps.has(op))return false;
-      return true;
-    };
-    sidings.sengakuji=sidings.sengakuji.filter(s=>keepCheck(s));
-    sidings.asakusabashi=sidings.asakusabashi.filter(s=>keepCheck(s));
-
-    // 1637N→1686Kのように番号も社局も変わる新規当駅始発南行が出現した場合、最古の引き上げ線を出庫消去
-    if(newSengaOrigs.length&&sidings.sengakuji.length){
-      newSengaOrigs.forEach(()=>{if(sidings.sengakuji.length)sidings.sengakuji.shift()});
-    }
-    if(newAsakusaOrigs.length&&sidings.asakusabashi.length){
-      newAsakusaOrigs.forEach(()=>{if(sidings.asakusabashi.length)sidings.asakusabashi.shift()});
-    }
-
+    const shouldKeep=s=>{if(sidingMatchesSouth(s.origNum,southCores))return false;const op=opCode(s.origNum);if(op&&southOps.has(op))return false;return true};
+    sidings.sengakuji=sidings.sengakuji.filter(shouldKeep);sidings.asakusabashi=sidings.asakusabashi.filter(shouldKeep);
+    if(newSengaOrigs.length&&sidings.sengakuji.length)newSengaOrigs.forEach(()=>{if(sidings.sengakuji.length)sidings.sengakuji.shift()});
+    if(newAsakusaOrigs.length&&sidings.asakusabashi.length)newAsakusaOrigs.forEach(()=>{if(sidings.asakusabashi.length)sidings.asakusabashi.shift()});
     if(hasPrevSnap){
       prevTrainMap.forEach((prev,cNum)=>{
         if(currCores.has(cNum))return;const op=opCode(prev.num);if(sidingMatchesSouth(prev.num,southCores)||(op&&southOps.has(op)))return;
@@ -338,11 +357,21 @@
     if(!run&&stId===NISHI_ID){const dep=stDeparture(t,"nishi",dir);if(dep)etaHtml=`<span class="dep-eta">西${esc(dep.time)}発</span>`}
     else if(!run&&stId===OSHI_ID){const ni=nextNishi(t),dep=stDeparture(t,"oshi",dir);etaHtml=`<span class="eta-group">${dep?`<span class="dep-eta">押${esc(dep.time)}発</span>`:""}<span class="nishi-eta${ni.none?" none":""}">西 ${esc(ni.text)}</span></span>`}
     else{const ni=nextNishi(t);etaHtml=`<span class="nishi-eta${ni.none?" none":""}">西 ${esc(ni.text)}</span>`}
+
+    let planChip="";
+    if(isAfterNakanobuSouth(t,dir)){
+      const plan=nishiArrivalPlan(t);
+      if(plan){
+        if(plan.isDepot)planChip=`<span class="track-num-chip" style="color:#FBBF24;background:rgba(245,158,11,.18);border-color:rgba(245,158,11,.45)">入庫予定</span>`;
+        else if(stId!==NISHI_ID&&plan.track)planChip=`<span class="track-num-chip">${plan.track}番線予定</span>`;
+      }
+    }
+
     const b=document.createElement("button");b.type="button";
     b.className=`train-badge ${run?"is-running":"is-stopped"} ${toei?"is-toei":"is-other"}`;
     b.innerHTML=`<div class="badge-row-top"><span class="train-type-chip ${esc(tp.c)}">${esc(tp.l)}</span><span class="train-num-badge">${esc(num)}</span>${unitPillHtml(num)}</div>`+
       `<div class="badge-row-mid"><span class="dest-wrap"><span class="dir-arrow ${dir}">${dir==="north"?"↓":"↑"}</span><span class="dest-name">${esc(dst)}行</span></span>${etaHtml}</div>`+
-      `<div class="badge-row-bottom"><div class="status-chips"><span class="state-label ${run?"running":""}">${run?"走行中":"停車中"}</span>${trk?`<span class="track-num-chip">${trk}番線</span>`:""}${toei?'<span class="toei-owner-chip">都営車</span>':""}</div>${dm>0?`<span class="delay-tag">+${dm}分</span>`:""}</div>`;
+      `<div class="badge-row-bottom"><div class="status-chips"><span class="state-label ${run?"running":""}">${run?"走行中":"停車中"}</span>${trk?`<span class="track-num-chip">${trk}番線</span>`:""}${planChip}${toei?'<span class="toei-owner-chip">都営車</span>':""}</div>${dm>0?`<span class="delay-tag">+${dm}分</span>`:""}</div>`;
     b.addEventListener("click",()=>openMod(t,dir,run,trk,null,null,stId));
     return b;
   }
@@ -385,10 +414,8 @@
     const l1=[],l2=[],unk=[];
     items.forEach(x=>{const tr=nishiTrack(x.t,dir);if(tr===1)l1.push(x);else if(tr===2)l2.push(x);else unk.push(x)});
     unk.forEach(x=>{if(!l1.length)l1.push(x);else l2.push(x)});
-    if(l1.length)l1.forEach(x=>el.appendChild(badge(x.t,dir,false,1,NISHI_ID)));
-    else{const d=document.createElement("div");d.className="empty-bay-slot";d.textContent="1番線（空き）";el.appendChild(d)}
-    if(l2.length)l2.forEach(x=>el.appendChild(badge(x.t,dir,false,2,NISHI_ID)));
-    else{const d=document.createElement("div");d.className="empty-bay-slot";d.textContent="2番線（空き）";el.appendChild(d)}
+    if(l1.length)l1.forEach(x=>el.appendChild(badge(x.t,dir,false,1,NISHI_ID)));else{const d=document.createElement("div");d.className="empty-bay-slot";d.textContent="1番線（空き）";el.appendChild(d)}
+    if(l2.length)l2.forEach(x=>el.appendChild(badge(x.t,dir,false,2,NISHI_ID)));else{const d=document.createElement("div");d.className="empty-bay-slot";d.textContent="2番線（空き）";el.appendChild(d)}
   }
 
   function addSengaSouth(el,items,preList,guide){
@@ -504,6 +531,12 @@
       ["列車番号",`<span class="train-num-badge" style="font-size:12px">${esc(num)}</span>${uEnt?` <span class="unit-badge" style="font-size:12px">${esc(uEnt.car)}</span>`:""}`,""],
       ["始発駅",esc(origTxt),""],["直近 西馬込着",esc(niTxt),""]
     ];
+    if(isAfterNakanobuSouth(t,dir)){
+      const plan=nishiArrivalPlan(t);
+      if(plan){
+        rows.push(["西馬込 着予定",esc(plan.isDepot?"入庫予定（折返し運用なし）":`${plan.track}番線予定（次発 ${plan.nextTime} ${plan.nextTrain}）`),""]);
+      }
+    }
     if(!run&&stId===NISHI_ID){const dep=stDeparture(t,"nishi",dir);if(dep)rows.push(["西馬込 発車予定",esc(`${dep.time}（${dep.train}）`),""])}
     else if(!run&&stId===OSHI_ID){const dep=stDeparture(t,"oshi",dir);if(dep)rows.push(["押上 発車予定",esc(`${dep.time}（${dep.train}）`),""])}
     rows.push(["車両所属",`<span class="owner-pill${toei?" toei":""}">${esc(own)}</span>`,""]);
@@ -589,8 +622,6 @@
   unitAddBtn.addEventListener("click",()=>{const op=normOpInput(unitAddOp.value),car=unitAddCar.value.trim();if(!op||!car)return;setUnitEntry(op,car,unitAddPairChk.checked);unitAddOp.value="";unitAddCar.value="";renderUnitModal();render(lastTrains)});
   unitClearAllBtn.addEventListener("click",()=>{if(!Object.keys(unitData.items).length)return;unitData.items={};saveUnits();renderUnitModal();render(lastTrains)});
 
-  const fmtHmStr=hm=>{if(!/^\d{3,4}$/.test(hm))return"";const s=hm.padStart(4,"0");return s.slice(0,2)+":"+s.slice(2,4)};
-
   function pickKindAt(lg,stName){
     if(!lg)return"";
     const lt=window.getStationLineType?window.getStationLineType(stName):2;
@@ -621,8 +652,7 @@
           path.forEach(p=>{const df=Math.abs(p.cum-target);if(df<bestDiff){bestDiff=df;best=p}});
           stName=best.name;
         }
-        const curKind=pickKindAt(lg,stName);
-        return{mode:"est",station:stName,badge:"推定位置（運用表）",badgeCls:"est",detail:`${lg.num} ${curKind} ${lg.to.replace("(SKY)","")}行 (${fmtHmStr(lg.dep)}→${fmtHmStr(lg.arr)})`};
+        return{mode:"est",station:stName,badge:"推定位置（運用表）",badgeCls:"est",detail:`${lg.num} ${pickKindAt(lg,stName)} ${lg.to.replace("(SKY)","")}行 (${fmtHmStr(lg.dep)}→${fmtHmStr(lg.arr)})`};
       }
     }
 
