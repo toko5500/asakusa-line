@@ -790,4 +790,26 @@
       if(!r.ok)throw new Error("HTTP "+r.status);
       const d=await r.json();if(!Array.isArray(d))throw new Error("Bad JSON");
       banEl.className="status-banner";banMsg.textContent="";
-      update
+      updateSidings(d);lastTrains=d;render(d);lastOk=new Date();updEl.textContent=`最終更新 ${fmtTime(lastOk)}`;
+      if(searchModalEl.classList.contains("open"))renderSearchModal();
+      if(!ttReady)ensureTT();
+    }catch(e){
+      banEl.className="status-banner error";banMsg.textContent="運行データの取得に失敗しました。";retBtn.style.display="inline-block";
+      if(!lastOk){updEl.textContent="取得エラー";render([])}
+    }finally{
+      fetching=false;refBtn.disabled=false;refBtn.classList.remove("is-loading");
+      leftSec=SEC;cdEl.textContent=autoOn?`自動 ${leftSec}s`:"自動 OFF";
+    }
+  }
+
+  refBtn.addEventListener("click",load);retBtn.addEventListener("click",load);
+  autoTg.addEventListener("change",e=>{autoOn=e.target.checked;leftSec=SEC;cdEl.textContent=autoOn?`自動 ${leftSec}s`:"自動 OFF"});
+  modCls.addEventListener("click",()=>modEl.classList.remove("open"));
+  modEl.addEventListener("click",e=>{if(e.target===modEl)modEl.classList.remove("open")});
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"){modEl.classList.remove("open");unitModalEl.classList.remove("open");searchModalEl.classList.remove("open")}});
+  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&autoOn&&(!lastOk||Date.now()-lastOk.getTime()>SEC*1000))load()});
+  setInterval(()=>{if(!autoOn||fetching)return;if(--leftSec<=0)load();else cdEl.textContent=`自動 ${leftSec}s`},1000);
+
+  applyLay();render([]);
+  load().then(()=>ensureTT());
+})();
