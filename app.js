@@ -1,4 +1,4 @@
-(function(){
+ (function(){
   "use strict";
   const API="https://api-public.odpt.org/api/v4/odpt:Train?odpt:operator=odpt.Operator:Toei&odpt:railway=odpt.Railway:Toei.Asakusa";
   const TT_BASE="https://api-public.odpt.org/api/v4/odpt:TrainTimetable?odpt:operator=odpt.Operator:Toei&odpt:railway=odpt.Railway:Toei.Asakusa&odpt:calendar=odpt.Calendar:";
@@ -72,6 +72,7 @@
   const opCode=num=>{const m=String(num||"").match(/(\d{2})(SH|[THKNAC])[a-z]?$/i);return m?(m[1]+m[2].toUpperCase()):""};
   const coreNum=num=>{const m=String(num||"").match(/^(\d+)(SH|[THKNAC])/i);return m?(m[1]+m[2].toUpperCase()):String(num||"").toUpperCase()};
   const toSvcMin=hm=>{if(!hm)return null;const[h,m]=hm.split(":").map(Number);return isNaN(h)||isNaN(m)?null:(h<4?h+24:h)*60+m};
+  const tsToSvcMin=ts=>{const d=new Date(ts),h=d.getHours();return(h<4?h+24:h)*60+d.getMinutes()};
   const nowSvcMin=()=>{const h=new Date().getHours();return(h<4?h+24:h)*60+new Date().getMinutes()};
   const hasSt=(f,slug)=>Array.isArray(f)?f.some(x=>tail(x)===slug):tail(f)===slug;
   const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -113,6 +114,10 @@
   }
   function pickExpectedNum(origNum){const c=returnCands(origNum);if(!c.length)return"---";if(SIDING_ALIAS[coreNum(origNum)])return c[0];if(ttReady){const h=c.find(x=>ttByCore.has(x));if(h)return h}return c[0]}
   function sidingMatchesSouth(origNum,southCoreSet){return returnCands(origNum).some(c=>southCoreSet.has(c))}
+  function sidingMatchesPre(sidingOrigNum,preNum){
+    const cands=returnCands(sidingOrigNum),sOp=opCode(sidingOrigNum),pCore=coreNum(preNum),pOp=opCode(preNum);
+    return cands.includes(pCore)||(sOp&&pOp&&(sOp===pOp||pairOpKey(sOp)===pOp||minusOneOpKey(sOp)===pOp));
+  }
 
   function guessCal(){
     const d=svcDateObj(),w=d.getDay(),m=d.getMonth()+1,dt=d.getDate(),y=d.getFullYear();
@@ -251,7 +256,6 @@
       const future=list.find(x=>x.min>=nowM-5&&x.min<=nowM+50);if(future)return{time:future.time,train:future.num};
       if(isDep){const delayed=[...list].reverse().find(x=>x.min>=nowM-25&&x.min<nowM-5);if(delayed)return{time:delayed.time,train:delayed.num}}
     }
-    // 西馬込折り返し時は2番線リストからも補完
     if(which==="nishi"&&!isDep&&window.NISHI_T2){
       const cal=guessCal(),t2List=window.NISHI_T2[cal]||[];
       for(const cop of opCands){
@@ -321,7 +325,9 @@
   function dirOf(t){const d=t["odpt:railDirection"]||"";if(d.includes("Northbound"))return"north";if(d.includes("Southbound"))return"south";const fi=IDX.get(t["odpt:fromStation"]),ti=IDX.get(t["odpt:toStation"]);return(fi!==undefined&&ti!==undefined)?(ti>fi?"north":"south"):"north"}
 
   function updateSidings(currTrains){
-    const now=Date.now();sidings.sengakuji=sidings.sengakuji.filter(s=>now-s.enteredAt<3600000);sidings.asakusabashi=sidings.asakusabashi.filter(s=>now-s.enteredAt<3600000);
+    const now=Date.now(),nowM=nowSvcMin();
+    sidings.sengakuji=sidings.sengakuji.filter(s=>now-s.enteredAt<3600000);
+    sidings.asakusabashi=sidings.asakusabashi.filter(s=>now-s.enteredAt<3600000);
     const currCores=new Set(),southCores=new Set(),southOps=new Set(),newSengaOrigs=[],newAsakusaOrigs=[];
     currTrains.forEach(t=>{
       const num=t["odpt:trainNumber"]||"",cn=num?coreNum(num):"";
@@ -334,10 +340,28 @@
         }
       }
     });
-    const shouldKeep=s=>{if(sidingMatchesSouth(s.origNum,southCores))return false;const op=opCode(s.origNum);if(op&&southOps.has(op))return false;return true};
-    sidings.sengakuji=sidings.sengakuji.filter(shouldKeep);sidings.asakusabashi=sidings.asakusabashi.filter(shouldKeep);
+
+    // 1番線始発(京急方面行き)の発車時刻を過ぎていたら自動消去（取り残し防止）
+    const depPre1=sengaOrigins.filter(x=>x.targetTrack===1);
+    const keepSenga=s=>{
+      if(sidingMatchesSouth(s.origNum,southCores))return false;
+      const op=opCode(s.origNum);if(op&&southOps.has(op))return false;
+      const entM=tsToSvcMin(s.enteredAt);
+      const departed1=depPre1.some(p=>sidingMatchesPre(s.origNum,p.num)&&p.depMin>=entM-15&&nowM>p.depMin+1);
+      if(departed1)return false;
+      return true;
+    };
+    const keepAsakusa=s=>{
+      if(sidingMatchesSouth(s.origNum,southCores))return false;
+      const op=opCode(s.origNum);if(op&&southOps.has(op))return false;
+      return true;
+    };
+    sidings.sengakuji=sidings.sengakuji.filter(keepSenga);
+    sidings.asakusabashi=sidings.asakusabashi.filter(keepAsakusa);
+
     if(newSengaOrigs.length&&sidings.sengakuji.length)newSengaOrigs.forEach(()=>{if(sidings.sengakuji.length)sidings.sengakuji.shift()});
     if(newAsakusaOrigs.length&&sidings.asakusabashi.length)newAsakusaOrigs.forEach(()=>{if(sidings.asakusabashi.length)sidings.asakusabashi.shift()});
+
     if(hasPrevSnap){
       prevTrainMap.forEach((prev,cNum)=>{
         if(currCores.has(cNum))return;const op=opCode(prev.num);if(sidingMatchesSouth(prev.num,southCores)||(op&&southOps.has(op)))return;
@@ -389,12 +413,12 @@
     return b;
   }
 
-  function sidingBadge(s,stName,stKey,preMatch,waitingForTrack2){
+  function sidingBadge(s,stName,stKey,preMatch,waitTrack){
     const t=s.train,toei=isToei(t),tp=preMatch?trType(preMatch.trainType):trType(t["odpt:trainType"]);
     const dispExp=pickExpectedNum(s.origNum),numDisp=preMatch?preMatch.num:s.origNum;
     const dstHtml=preMatch?`<span class="dest-name">${esc(fmtDest(preMatch.dest))}行</span>`:`<span class="dest-name">折返待(${esc(dispExp)})</span>`;
     const etaHtml=preMatch?`<span class="dep-eta">始${esc(preMatch.depTime)}発</span>`:"";
-    const stateLabel=waitingForTrack2?"引き上げ線（2番線待）":"引き上げ線";
+    const stateLabel=waitTrack?`引き上げ線（${waitTrack}番線待）`:"引き上げ線";
     const b=document.createElement("button");b.type="button";
     b.className=`train-badge is-siding ${toei?"is-toei":"is-other"}`;
     b.innerHTML=`<div class="badge-row-top"><span class="train-type-chip ${esc(tp.c)}">${preMatch?esc(tp.l):"引上"}</span><span class="train-num-badge">${esc(numDisp)}</span>${unitPillHtml(numDisp)||unitPillHtml(s.origNum)}</div>`+
@@ -408,7 +432,7 @@
     const tp=trType(p.trainType),dst=fmtDest(p.dest),toei=isToei({"odpt:trainNumber":p.num});
     const b=document.createElement("button");b.type="button";
     b.className=`train-badge ${inSiding?"is-siding":"is-pre"} ${toei?"is-toei":"is-other"}`;
-    const stateCls=inSiding?"siding":"pre",stateTxt=inSiding?"引き上げ線（2番線待）":"始発予定",trkChip=inSiding?"":`<span class="track-num-chip">${p.targetTrack}番線</span>`;
+    const stateCls=inSiding?"siding":"pre",stateTxt=inSiding?`引き上げ線（${p.targetTrack}番線待）`:"始発予定",trkChip=inSiding?"":`<span class="track-num-chip">${p.targetTrack}番線</span>`;
     b.innerHTML=`<div class="badge-row-top"><span class="train-type-chip ${esc(tp.c)}">${esc(tp.l)}</span><span class="train-num-badge">${esc(p.num)}</span>${unitPillHtml(p.num)}</div>`+
       `<div class="badge-row-mid"><span class="dest-wrap"><span class="dir-arrow south">↑</span><span class="dest-name">${esc(dst)}行</span></span><span class="dep-eta">始${esc(p.depTime)}発</span></div>`+
       `<div class="badge-row-bottom"><div class="status-chips"><span class="state-label ${stateCls}">${stateTxt}</span>${trkChip}${toei?'<span class="toei-owner-chip">都営車</span>':""}</div></div>`;
@@ -431,23 +455,38 @@
     if(l2.length)l2.forEach(x=>el.appendChild(badge(x.t,dir,false,2,NISHI_ID)));else{const d=document.createElement("div");d.className="empty-bay-slot";d.textContent="2番線（空き）";el.appendChild(d)}
   }
 
-  function addSengaSouth(el,items,preList,guide){
+  function addSengaSouth(el,items,preList,guide,allTrains){
     const g=document.createElement("div");g.className="bay-guide";g.textContent=guide;el.appendChild(g);
     const l1=[],l2=[];items.forEach(x=>{if(sengaTrack(x.t,"south")===1)l1.push(x);else l2.push(x)});
-    const pre1=preList.filter(p=>p.targetTrack===1),pre2=preList.filter(p=>p.targetTrack===2),track2Busy=l2.length>0;
-    if(l1.length)l1.forEach(x=>el.appendChild(badge(x.t,"south",false,1,SENGA_ID)));
+    const pre1=preList.filter(p=>p.targetTrack===1),pre2=preList.filter(p=>p.targetTrack===2);
+
+    // 三田〜泉岳寺間に西馬込行きの先発列車が走行中なら2番線へのフライング遷移を防ぐ
+    const approachingTrack2=allTrains.some(t=>dirOf(t)==="south"&&hasSt(t["odpt:destinationStation"],"NishiMagome")&&t["odpt:fromStation"]===P+"Mita"&&t["odpt:toStation"]===SENGA_ID);
+    const track1Busy=l1.length>0,track2Busy=l2.length>0||approachingTrack2;
+
+    const usedPre1=new Set(),usedPre2=new Set(),sidingNodes=[];
+    sidings.sengakuji.forEach(s=>{
+      const m1=pre1.find(p=>sidingMatchesPre(s.origNum,p.num));
+      const m2=m1?null:pre2.find(p=>sidingMatchesPre(s.origNum,p.num));
+      if(m1){
+        usedPre1.add(m1);
+        if(track1Busy)sidingNodes.push(sidingBadge(s,"泉岳寺","sengakuji",m1,1));
+      }else if(m2){
+        usedPre2.add(m2);
+        if(track2Busy)sidingNodes.push(sidingBadge(s,"泉岳寺","sengakuji",m2,2));
+      }else{
+        sidingNodes.push(sidingBadge(s,"泉岳寺","sengakuji",null,null));
+      }
+    });
+
+    const remainPre1=pre1.filter(p=>!usedPre1.has(p));
+    if(track1Busy){l1.forEach(x=>el.appendChild(badge(x.t,"south",false,1,SENGA_ID)));remainPre1.forEach(p=>sidingNodes.push(preBadge(p,true)))}
     else if(pre1.length)pre1.forEach(p=>el.appendChild(preBadge(p,false)));
     else{const d=document.createElement("div");d.className="empty-bay-slot";d.textContent="1番線（空き）";el.appendChild(d)}
 
-    const usedPre2=new Set(),sidingNodes=[];
-    sidings.sengakuji.forEach(s=>{
-      const sOp=opCode(s.origNum),cands=returnCands(s.origNum);
-      const matchPre=pre2.find(p=>cands.includes(coreNum(p.num))||(sOp&&opCode(p.num)===sOp));
-      if(matchPre){usedPre2.add(matchPre);if(track2Busy)sidingNodes.push(sidingBadge(s,"泉岳寺","sengakuji",matchPre,true))}
-      else sidingNodes.push(sidingBadge(s,"泉岳寺","sengakuji",null,false));
-    });
     const remainPre2=pre2.filter(p=>!usedPre2.has(p));
-    if(track2Busy){l2.forEach(x=>el.appendChild(badge(x.t,"south",false,2,SENGA_ID)));remainPre2.forEach(p=>sidingNodes.push(preBadge(p,true)))}
+    if(l2.length){l2.forEach(x=>el.appendChild(badge(x.t,"south",false,2,SENGA_ID)));remainPre2.forEach(p=>sidingNodes.push(preBadge(p,true)))}
+    else if(approachingTrack2){const d=document.createElement("div");d.className="empty-bay-slot";d.textContent="2番線（間もなく到着）";el.appendChild(d);remainPre2.forEach(p=>sidingNodes.push(preBadge(p,true)))}
     else if(pre2.length)pre2.forEach(p=>el.appendChild(preBadge(p,false)));
     else{const d=document.createElement("div");d.className="empty-bay-slot";d.textContent="2番線（空き）";el.appendChild(d)}
 
@@ -465,7 +504,7 @@
   function addAsakusaSouth(el,items,guide){
     const g=document.createElement("div");g.className="bay-guide";g.textContent=guide;el.appendChild(g);
     if(items.length)items.forEach(x=>el.appendChild(badge(x.t,"south",false,1,ASAKUSABASHI_ID)));else{const d=document.createElement("div");d.className="empty-bay-slot";d.textContent="1番線（空き）";el.appendChild(d)}
-    if(sidings.asakusabashi.length)sidings.asakusabashi.forEach(s=>el.appendChild(sidingBadge(s,"浅草橋","asakusabashi",null,false)));else{const d=document.createElement("div");d.className="empty-bay-slot siding";d.textContent="引き上げ線（空き）";el.appendChild(d)}
+    if(sidings.asakusabashi.length)sidings.asakusabashi.forEach(s=>el.appendChild(sidingBadge(s,"浅草橋","asakusabashi",null,null)));else{const d=document.createElement("div");d.className="empty-bay-slot siding";d.textContent="引き上げ線（空き）";el.appendChild(d)}
   }
 
   function render(trains){
@@ -493,7 +532,7 @@
         sr.className=`station-row${i===0?" first-station":""}${i===ST.length-1?" last-station":""}${s.isDouble||s.id===ASAKUSABASHI_ID?" is-double-track":""}`;
         const lc=document.createElement("div");lc.className="track-col left";
         if(s.id===NISHI_ID)addNishiSide(lc,stSl[i].south,"south",s.lg);
-        else if(s.id===SENGA_ID)addSengaSouth(lc,stSl[i].south,sengaPre,s.lg);
+        else if(s.id===SENGA_ID)addSengaSouth(lc,stSl[i].south,sengaPre,s.lg,trains);
         else if(s.id===ASAKUSABASHI_ID)addAsakusaSouth(lc,stSl[i].south,s.lg);
         else if(s.isDouble)addSlots(lc,stSl[i].south,"south",s.lb,s.lg,s.id);
         else stSl[i].south.forEach(x=>lc.appendChild(badge(x.t,"south",false,null,s.id)));
@@ -529,8 +568,8 @@
           fn=OBJ.get(t["odpt:fromStation"])?.name||trSt(t["odpt:fromStation"]),
           tn=t["odpt:toStation"]?(OBJ.get(t["odpt:toStation"])?.name||trSt(t["odpt:toStation"])):null;
     let loc=run&&tn?`${fn} → ${tn} 走行中`:`${fn}駅 停車中${trk?`（${trk}番線）`:""}`;
-    if(sidingInfo)loc=`${sidingInfo.stName}駅 引き上げ線（${preInfo?`2番線空次第入線 ${preInfo.depTime}発`:"折返待"}）`;
-    else if(preInfo)loc=`泉岳寺駅 ${trk?trk+"番線":"引き上げ線（2番線待）"}（始発予定 ${preInfo.depTime}発）`;
+    if(sidingInfo)loc=`${sidingInfo.stName}駅 引き上げ線（${preInfo?`${preInfo.targetTrack}番線空次第入線 ${preInfo.depTime}発`:"折返待"}）`;
+    else if(preInfo)loc=`泉岳寺駅 ${trk?trk+"番線":`引き上げ線（${preInfo.targetTrack}番線待）`}（始発予定 ${preInfo.depTime}発）`;
 
     const dtxt=dir==="north"?"押上方面（北行 ↓）":"西馬込・泉岳寺方面（南行 ↑）",
           dltxt=dm>0?`+${dm}分（約${ds}秒遅れ）`:"定時（遅れなし）",
@@ -743,7 +782,7 @@
   searchAllChk.addEventListener("change",renderSearchModal);
   searchClearBtn.addEventListener("click",()=>{searchInp.value="";renderSearchModal()});
 
-  async function ensureTT(){if(ttReady||ttLoading)return;const ok=await loadTT(guessCal());if(ok&&lastTrains.length)render(lastTrains)}
+  async function ensureTT(){if(ttReady||ttLoading)return;const ok=await loadTT(guessCal());if(ok&&lastTrains.length){updateSidings(lastTrains);render(lastTrains)}}
   async function load(){
     if(fetching)return;fetching=true;refBtn.disabled=true;refBtn.classList.add("is-loading");
     try{
@@ -751,26 +790,4 @@
       if(!r.ok)throw new Error("HTTP "+r.status);
       const d=await r.json();if(!Array.isArray(d))throw new Error("Bad JSON");
       banEl.className="status-banner";banMsg.textContent="";
-      updateSidings(d);lastTrains=d;render(d);lastOk=new Date();updEl.textContent=`最終更新 ${fmtTime(lastOk)}`;
-      if(searchModalEl.classList.contains("open"))renderSearchModal();
-      if(!ttReady)ensureTT();
-    }catch(e){
-      banEl.className="status-banner error";banMsg.textContent="運行データの取得に失敗しました。";retBtn.style.display="inline-block";
-      if(!lastOk){updEl.textContent="取得エラー";render([])}
-    }finally{
-      fetching=false;refBtn.disabled=false;refBtn.classList.remove("is-loading");
-      leftSec=SEC;cdEl.textContent=autoOn?`自動 ${leftSec}s`:"自動 OFF";
-    }
-  }
-
-  refBtn.addEventListener("click",load);retBtn.addEventListener("click",load);
-  autoTg.addEventListener("change",e=>{autoOn=e.target.checked;leftSec=SEC;cdEl.textContent=autoOn?`自動 ${leftSec}s`:"自動 OFF"});
-  modCls.addEventListener("click",()=>modEl.classList.remove("open"));
-  modEl.addEventListener("click",e=>{if(e.target===modEl)modEl.classList.remove("open")});
-  document.addEventListener("keydown",e=>{if(e.key==="Escape"){modEl.classList.remove("open");unitModalEl.classList.remove("open");searchModalEl.classList.remove("open")}});
-  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&autoOn&&(!lastOk||Date.now()-lastOk.getTime()>SEC*1000))load()});
-  setInterval(()=>{if(!autoOn||fetching)return;if(--leftSec<=0)load();else cdEl.textContent=`自動 ${leftSec}s`},1000);
-
-  applyLay();render([]);
-  load().then(()=>ensureTT());
-})();
+      update
