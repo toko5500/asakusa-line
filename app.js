@@ -1,4 +1,4 @@
- (function(){
+(function(){
   "use strict";
   const API="https://api-public.odpt.org/api/v4/odpt:Train?odpt:operator=odpt.Operator:Toei&odpt:railway=odpt.Railway:Toei.Asakusa";
   const TT_BASE="https://api-public.odpt.org/api/v4/odpt:TrainTimetable?odpt:operator=odpt.Operator:Toei&odpt:railway=odpt.Railway:Toei.Asakusa&odpt:calendar=odpt.Calendar:";
@@ -11,7 +11,7 @@
     Weekday:["05:49 514T 快特 羽田空港","05:58 576H 特急 三崎口","06:16 650SH 快特 羽田空港","06:34 682H 特急 三崎口","06:47 618C 特急 浦賀","07:11 728H 特急 三崎口","07:26 710T 急行 羽田空港","10:35 1004A 快特 三崎口","10:57 1002A 快特 京急久里浜","11:17 1114A 快特 京急久里浜","11:37 1106A 快特 京急久里浜","11:57 1108A 快特 京急久里浜","12:17 1210A 快特 京急久里浜","12:37 1212A 快特 京急久里浜","12:57 1200A 快特 京急久里浜","13:17 1302A 快特 京急久里浜","13:37 1304A 快特 三崎口","13:57 1306A 快特 京急久里浜","14:17 1408A 快特 京急久里浜","14:37 1410A 快特 京急久里浜","14:57 1412A 快特 京急久里浜","15:17 1500A 快特 京急久里浜","15:37 1502A 快特 京急久里浜","15:56 1514A 快特 京急久里浜","16:06 1626T 特急 羽田空港","16:46 1686H 急行 羽田空港","17:26 1700K 特急 京急久里浜","17:31 1754T 急行 羽田空港","19:32 1966K 急行 羽田空港","19:41 1970K 急行 羽田空港","21:00 2162H 急行 羽田空港","21:40 2186K 急行 羽田空港","22:12 2280H 急行 羽田空港","22:34 2234N 急行 羽田空港","22:59 2228H 特急 京急久里浜","23:22 2368H 特急 京急久里浜","23:41 2350H 特急 逗子・葉山","23:59 2374H 特急 金沢文庫"],
     SaturdayHoliday:["05:58 514H 急行 羽田空港","06:19 652H 急行 羽田空港","06:37 628H 急行 羽田空港","06:54 658H 特急 京急久里浜","08:20 820N 急行 羽田空港","08:45 806A 快特 三崎口","09:06 908A 快特 三崎口","09:25 910A 快特 三崎口","09:56 914A 快特 三崎口","10:17 1000A 快特 三崎口","10:37 1002A 快特 三崎口","10:57 1004A 快特 京急久里浜","11:17 1130A 快特 三崎口","11:37 1106A 快特 三崎口","11:57 1108A 快特 京急久里浜","12:17 1210A 快特 三崎口","12:37 1212A 快特 三崎口","12:57 1214A 快特 三崎口","13:17 1300A 快特 三崎口","13:37 1302A 快特 三崎口","13:57 1304A 快特 三崎口","14:17 1430A 快特 三崎口","14:37 1406A 快特 三崎口","14:57 1408A 快特 三崎口","15:17 1510A 快特 三崎口","15:37 1512A 快特 三崎口","15:57 1514A 快特 三崎口","16:17 1600A 快特 三崎口","16:37 1602A 快特 京急久里浜","16:57 1604A 快特 三崎口","17:17 1730A 快特 三崎口","17:37 1706A 快特 京急久里浜","17:57 1708A 快特 京急久里浜","18:17 1810A 快特 京急久里浜","18:37 1812A 快特 京急久里浜","18:57 1814A 快特 三崎口","19:16 1900C 特急 京急久里浜","19:37 1926H 特急 三崎口","19:56 1904C 特急 京急久里浜","20:16 2050H 特急 京急久里浜","20:36 2066H 特急 三崎口","20:56 2054H 特急 京急久里浜","21:16 2174H 特急 京急久里浜","22:07 2240T 特急 逗子・葉山","22:40 2286K 急行 羽田空港","00:08 2412T 普通 品川"]
   };
-  const JP_TYPE={"普通":"odpt.TrainType:Toei.Local","急行":"odpt.TrainType:Toei.Express","特急":"odpt.TrainType:Toei.LimitedExpress","快特":"odpt.TrainType:Toei.Rapid","エアポート快特":"odpt.TrainType:Toei.AirportLimitedExpress","アクセス特急":"odpt.TrainType:Toei.AccessExpress"};
+  const JP_TYPE={"普通":"odpt.TrainType:Toei.Local","急行":"odpt.TrainType:Toei.Express","特急":"odpt.TrainType:Toei.LimitedExpress","快特":"odpt.TrainType:Toei.RapidLimitedExpress","快速":"odpt.TrainType:Toei.Rapid","エアポート快特":"odpt.TrainType:Toei.AirportLimitedExpress","アクセス特急":"odpt.TrainType:Toei.AccessExpress"};
 
   const OPS_WD=[],OPS_HD=[];
   for(let n=1;n<=33;n+=2)OPS_WD.push(String(n).padStart(2,"0")+"T");
@@ -341,7 +341,6 @@
       }
     });
 
-    // 1番線始発(京急方面行き)の発車時刻を過ぎていたら自動消去（取り残し防止）
     const depPre1=sengaOrigins.filter(x=>x.targetTrack===1);
     const keepSenga=s=>{
       if(sidingMatchesSouth(s.origNum,southCores))return false;
@@ -459,8 +458,6 @@
     const g=document.createElement("div");g.className="bay-guide";g.textContent=guide;el.appendChild(g);
     const l1=[],l2=[];items.forEach(x=>{if(sengaTrack(x.t,"south")===1)l1.push(x);else l2.push(x)});
     const pre1=preList.filter(p=>p.targetTrack===1),pre2=preList.filter(p=>p.targetTrack===2);
-
-    // 三田〜泉岳寺間に西馬込行きの先発列車が走行中なら2番線へのフライング遷移を防ぐ
     const approachingTrack2=allTrains.some(t=>dirOf(t)==="south"&&hasSt(t["odpt:destinationStation"],"NishiMagome")&&t["odpt:fromStation"]===P+"Mita"&&t["odpt:toStation"]===SENGA_ID);
     const track1Busy=l1.length>0,track2Busy=l2.length>0||approachingTrack2;
 
@@ -468,15 +465,9 @@
     sidings.sengakuji.forEach(s=>{
       const m1=pre1.find(p=>sidingMatchesPre(s.origNum,p.num));
       const m2=m1?null:pre2.find(p=>sidingMatchesPre(s.origNum,p.num));
-      if(m1){
-        usedPre1.add(m1);
-        if(track1Busy)sidingNodes.push(sidingBadge(s,"泉岳寺","sengakuji",m1,1));
-      }else if(m2){
-        usedPre2.add(m2);
-        if(track2Busy)sidingNodes.push(sidingBadge(s,"泉岳寺","sengakuji",m2,2));
-      }else{
-        sidingNodes.push(sidingBadge(s,"泉岳寺","sengakuji",null,null));
-      }
+      if(m1){usedPre1.add(m1);if(track1Busy)sidingNodes.push(sidingBadge(s,"泉岳寺","sengakuji",m1,1))}
+      else if(m2){usedPre2.add(m2);if(track2Busy)sidingNodes.push(sidingBadge(s,"泉岳寺","sengakuji",m2,2))}
+      else sidingNodes.push(sidingBadge(s,"泉岳寺","sengakuji",null,null));
     });
 
     const remainPre1=pre1.filter(p=>!usedPre1.has(p));
