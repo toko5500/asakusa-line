@@ -85,6 +85,7 @@
     return s;
   }
   function pairOpKey(op){const m=String(op||"").match(/^(\d{2})(SH|[THKNAC])$/i);if(!m)return"";const n=parseInt(m[1],10);return String((n%2===1)?n-1:n+1).padStart(2,"0")+m[2].toUpperCase()}
+  function minusOneOpKey(op){const m=String(op||"").match(/^(\d{2})(SH|[THKNAC])$/i);if(!m)return"";const n=parseInt(m[1],10);return n>0?String(n-1).padStart(2,"0")+m[2].toUpperCase():""}
   function oddOpKey(op){const m=String(op||"").match(/^(\d{2})T$/i);if(!m)return op;const n=parseInt(m[1],10);return(n%2===0?String(n+1).padStart(2,"0"):m[1])+"T"}
   function findUnitEntry(trainNum){
     checkUnitReset();const op=opCode(trainNum);if(!op)return null;
@@ -234,16 +235,29 @@
   }
   function stDeparture(t,which,dir){
     if(!ttReady)return null;
-    const num=t["odpt:trainNumber"]||"",nowM=nowSvcMin(),cur=ttByNum.get(num);
-    if(which==="nishi"&&cur&&cur.nd)return{time:cur.nd,train:num};
-    if(which==="oshi"&&cur&&cur.od)return{time:cur.od,train:num};
-    const coreList=ttByCore.get(coreNum(num));
-    if(coreList){const m=coreList.find(x=>which==="nishi"?x.nd:x.od);if(m)return{time:which==="nishi"?m.nd:m.od,train:m.num}}
+    const num=t["odpt:trainNumber"]||"",nowM=nowSvcMin(),isDep=(which==="nishi"&&dir==="north")||(which==="oshi"&&dir==="south");
+    if(isDep){
+      const cur=ttByNum.get(num);
+      if(which==="nishi"&&cur&&cur.nd)return{time:cur.nd,train:num};
+      if(which==="oshi"&&cur&&cur.od)return{time:cur.od,train:num};
+      const coreList=ttByCore.get(coreNum(num));
+      if(coreList){const m=coreList.find(x=>which==="nishi"?x.nd:x.od);if(m)return{time:which==="nishi"?m.nd:m.od,train:m.num}}
+    }
     const op=opCode(num),map=which==="nishi"?nishiDepByOp:oshiDepByOp;
-    if(op&&map.has(op)){
-      const list=map.get(op),isDep=(which==="nishi"&&dir==="north")||(which==="oshi"&&dir==="south");
+    const opCands=isDep?[op]:Array.from(new Set([pairOpKey(op),op,minusOneOpKey(op)].filter(Boolean)));
+    for(const cop of opCands){
+      if(!map.has(cop))continue;
+      const list=map.get(cop);
       const future=list.find(x=>x.min>=nowM-5&&x.min<=nowM+50);if(future)return{time:future.time,train:future.num};
       if(isDep){const delayed=[...list].reverse().find(x=>x.min>=nowM-25&&x.min<nowM-5);if(delayed)return{time:delayed.time,train:delayed.num}}
+    }
+    // 西馬込折り返し時は2番線リストからも補完
+    if(which==="nishi"&&!isDep&&window.NISHI_T2){
+      const cal=guessCal(),t2List=window.NISHI_T2[cal]||[];
+      for(const cop of opCands){
+        const hit=t2List.find(x=>opCode(x.num)===cop&&x.min>=nowM-3&&x.min<=nowM+40);
+        if(hit)return{time:hit.time,train:hit.num};
+      }
     }
     return null;
   }
@@ -272,7 +286,6 @@
     return matchNishiT2(targetNum,dep?dep.time:null);
   }
 
-  // 南行・中延到着後（中延〜西馬込）の西馬込着予定・入庫予定判定
   function nishiArrivalPlan(t){
     const num=t["odpt:trainNumber"]||"",cn=coreNum(num),cal=guessCal(),toei=isToei(t);
     if(toei&&window.UNYO_DATA&&window.UNYO_DATA[cal]){
@@ -533,9 +546,7 @@
     ];
     if(isAfterNakanobuSouth(t,dir)){
       const plan=nishiArrivalPlan(t);
-      if(plan){
-        rows.push(["西馬込 着予定",esc(plan.isDepot?"入庫予定（折返し運用なし）":`${plan.track}番線予定（次発 ${plan.nextTime} ${plan.nextTrain}）`),""]);
-      }
+      if(plan)rows.push(["西馬込 着予定",esc(plan.isDepot?"入庫予定（折返し運用なし）":`${plan.track}番線予定（次発 ${plan.nextTime} ${plan.nextTrain}）`),""]);
     }
     if(!run&&stId===NISHI_ID){const dep=stDeparture(t,"nishi",dir);if(dep)rows.push(["西馬込 発車予定",esc(`${dep.time}（${dep.train}）`),""])}
     else if(!run&&stId===OSHI_ID){const dep=stDeparture(t,"oshi",dir);if(dep)rows.push(["押上 発車予定",esc(`${dep.time}（${dep.train}）`),""])}
